@@ -47,14 +47,21 @@ def render_report(agent1: Agent1Output, agent2: Agent2Output, agent3: Agent3Outp
     return rendered
 
 
-def markdown_to_pdf(markdown: str, pdf_path: str = "output/report.pdf") -> str:
-    """마크다운 문자열을 PDF로 저장"""
+def save_markdown_and_pdf(markdown: str, output_dir: str = "output") -> str:
+    """마크다운을 .md와 .pdf로 각각 저장"""
     import markdown2
     from weasyprint import HTML
 
-    html_str = markdown2.markdown(markdown, extras=["fenced-code-blocks", "tables"])
+    os.makedirs(output_dir, exist_ok=True)
 
-    os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+    # 마크다운 파일 저장
+    md_path = os.path.join(output_dir, "report.md")
+    with open(md_path, "w", encoding="utf-8") as f:
+        f.write(markdown)
+
+    # PDF 저장
+    html_str = markdown2.markdown(markdown, extras=["fenced-code-blocks", "tables"])
+    pdf_path = os.path.join(output_dir, "report.pdf")
     HTML(string=html_str).write_pdf(pdf_path)
 
     return pdf_path

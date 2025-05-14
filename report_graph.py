@@ -6,7 +6,7 @@ from agent2_finance import run_agent2
 from agent3_interview import run_agent3
 
 from models import Agent1Output, Agent2Output, Agent3Output
-from report_builder import render_report, markdown_to_pdf
+from report_builder import render_report, save_markdown_and_pdf
 
 
 # 1. 상태 정의
@@ -35,12 +35,11 @@ def run_agent3_node(state: ReportState):
 
 def combine_and_render(state: ReportState):
     markdown = render_report(state["agent1"], state["agent2"], state["agent3"])
-    pdf_path = markdown_to_pdf(markdown)
+    pdf_path = save_markdown_and_pdf(markdown)
     return {
         "markdown": markdown,
         "pdf_path": pdf_path
     }
-
 
 # 3. 그래프 구성
 def build_graph():
