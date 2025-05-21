@@ -1,0 +1,90 @@
+<!-- report/templates/default_report.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>기업 분석 보고서</title>
+  <style>
+    body {
+      font-family: 'Noto Sans', 'Noto Color Emoji', 'Segoe UI Emoji', sans-serif;
+      margin: 2rem;
+    }
+    h1, h2 { color: #2a2a2a; }
+    img { max-width: 100%; }
+    .section { margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>{{ 기업명 }} - {{ 직무명 }} 분석 보고서</h1>
+
+  <div class="section">
+    <h2>🏢 기업 일반 정보</h2>
+    <ul>
+      <li><strong>연혁:</strong> {{ company_info["연혁"] }}</li>
+      <li><strong>본사 주소:</strong> {{ company_info["주소"] }}</li>
+      <li><strong>복지 제도:</strong> {{ company_info["복지"] }}</li>
+      <li><strong>인재상:</strong> {{ company_info["인재상"] }}</li>
+      <li><strong>채용 사이트:</strong> <a href="{{ company_info["채용사이트"] }}">{{ company_info["채용사이트"] }}</a></li>
+      <li><strong>신년사:</strong> {{ company_info["신년사"] }}</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>📊 재무 요약</h2>
+    <p>매출 추이: {{ finance.매출 }}</p>
+    <img src="{{ finance.시각화 }}" alt="매출 시각화">
+  </div>
+
+  <div class="section">
+    <h2>📰 최신 뉴스 요약</h2>
+    <ul>
+      {% for news in news_list %}
+      <li><strong>{{ news.제목 }}</strong>: {{ news.요약 }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🧾 스펙 비교 요약</h2>
+    <ul>
+      {% for 항목, 설명 in resume.비교_요약.items() %}
+      <li><strong>{{ 항목 }}</strong>: {{ 설명 }}</li>
+      {% endfor %}
+    </ul>
+    <p><strong>자소서 추천 키워드:</strong> {{ resume.추천_키워드 }}</p>
+  </div>
+
+  <div class="section">
+    <h2>🗣 면접 요약</h2>
+    <ul>
+      <li><strong>면접 방식:</strong> {{ interview_summary["면접 방식"] }}</li>
+      <li><strong>질문 난이도:</strong> {{ interview_summary["질문 난이도"] }}</li>
+      <li><strong>면접관 태도:</strong> {{ interview_summary["면접관 태도"] }}</li>
+      <li><strong>지원자 팁:</strong> {{ interview_summary["지원자 팁"] }}</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🧠 직무 질문</h2>
+    <p><strong>질문 1:</strong> {{ interview_hard.question_1 }}</p>
+    <p><strong>답변 1:</strong> {{ interview_hard.answer_1 }}</p>
+    <p><strong>질문 2:</strong> {{ interview_hard.question_2 }}</p>
+    <p><strong>답변 2:</strong> {{ interview_hard.answer_2 }}</p>
+    <ul>
+      {% for tip in interview_hard.tips %}<li>{{ tip }}</li>{% endfor %}
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🧠 인성 질문</h2>
+    <p><strong>질문 1:</strong> {{ interview_soft.question_1 }}</p>
+    <p><strong>답변 1:</strong> {{ interview_soft.answer_1 }}</p>
+    <p><strong>질문 2:</strong> {{ interview_soft.question_2 }}</p>
+    <p><strong>답변 2:</strong> {{ interview_soft.answer_2 }}</p>
+    <ul>
+      {% for tip in interview_soft.tips %}<li>{{ tip }}</li>{% endfor %}
+    </ul>
+  </div>
+
+</body>
+</html>
