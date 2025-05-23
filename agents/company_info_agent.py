@@ -1,20 +1,54 @@
 # agents/company_info_agent.py
 
+import pandas as pd
+from pathlib import Path
+
+DATA_DIR = Path.cwd() / "data"
+
 def run(state: dict) -> dict:
     company = state["user_input"]["기업명"]
+    job = state["user_input"]["직무명"]
+    company_info_df = pd.read_csv(DATA_DIR / "company_info.csv")
 
-    output = {
-        "연혁": f"{company}는 1970년에 설립되어 글로벌 기업으로 성장하였습니다.",
-        "주소": "서울특별시 강남구 테헤란로 123",
-        "복지": "사내 식당, 복지 포인트, 유연 근무제 등 제공",
-        "채용사이트": f"https://recruit.{company.lower().replace('(주)', '').replace(' ', '').replace('.', '')}.com",
-        "인재상": "창의성, 도전정신, 팀워크를 갖춘 인재",
-        "신년사": "2024년은 디지털 혁신의 해입니다. 함께 도약합시다!"
-    }
+    # 🔹 복지 통합
+    welfare_columns = [col for col in company_info_df.columns if col.startswith("복지_")]
+    def merge_welfare_info(row):
+        return " / ".join([
+            f"{col.replace('복지_', '')}: {row[col]}"
+            for col in welfare_columns if pd.notna(row[col]) and str(row[col]).strip()
+        ])
+    company_info_df["복지_통합"] = company_info_df.apply(merge_welfare_info, axis=1)
 
+    # 🔹 기업 필터링
+    row = company_info_df[company_info_df["회사명"].str.contains(company, na=False)].reset_index(drop=True)
+    if row.empty:
+        state["company_info_result"] = {
+            "agent": "AgentCompanyInfo",
+            "output": None,
+            "error": f"{company}에 해당하는 기업 정보를 찾을 수 없습니다.",
+            "retry": True
+        }
+        return state
+
+    # 🔹 평균연봉 컬럼 처리
+    avg_salary_col = f"{job}_평균연봉"
+    avg_salary = row.at[0, avg_salary_col] if avg_salary_col in row.columns else "정보 없음"
+
+    # 🔹 최종 결과 구성
     state["company_info_result"] = {
         "agent": "AgentCompanyInfo",
-        "output": output,
+        "output": {
+            "history": row.at[0, "연혁"],
+            "address": row.at[0, "주소"],
+            "welfare": row.at[0, "복지_통합"],
+            "greeting": row.at[0, "짧은 신년사"] if "짧은 신년사" in row.columns else "정보 없음",
+            "talent": row.at[0, "인재상"],
+            "website": row.at[0, "홈페이지"],
+            "business": row.at[0, "사업내용"],
+            "employees": row.at[0, "직원수"],
+            "entry_salary": row.at[0, "신입사원 초봉"],
+            "avg_salary": avg_salary
+        },
         "error": None,
         "retry": False
     }

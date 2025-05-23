@@ -1,0 +1,142 @@
+<!-- report/templates/default_report.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>기업 분석 보고서</title>
+  <style>
+    body {
+      font-family: 'Noto Sans', 'Noto Color Emoji', 'Segoe UI Emoji', sans-serif;
+      margin: 2rem;
+      line-height: 1.6;
+    }
+    h1, h2 { color: #2a2a2a; }
+    img { max-width: 100%; }
+    .section { margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>{{ 기업명 }} - {{ 직무명 }} 분석 보고서</h1>
+
+  <div class="section">
+    <h2>🏢 기업 일반 정보</h2>
+    <ul>
+      <li><strong>연혁:</strong>
+        <ul>
+          {% for line in company_info["history"].split('\n')[:10] %}
+            <li>{{ line.strip() }}</li>
+          {% endfor %}
+        </ul>
+      </li>
+      <li><strong>본사 주소:</strong> {{ company_info["address"] }}</li>
+      <li><strong>복지 제도:</strong> {{ company_info["welfare"] }}</li>
+      <li><strong>인재상:</strong><br>
+        {{ company_info["talent"]
+            | replace('**', '')
+            | replace('\n', '<br>')
+            | safe }}
+      </li>
+      <li><strong>채용 사이트:</strong> <a href="{{ company_info["website"] }}">{{ company_info["website"] }}</a></li>
+      <li><strong>신년사:</strong> {{ company_info["greeting"] }}</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>📊 재무 요약</h2>
+    <p><strong>요약 인사이트:</strong> {{ finance.insight }}</p>
+    <p><strong>주가 차트:</strong></p>
+    <img src="{{ finance.stock_chart_path | safe }}" alt="주가 시각화" style="display:block; width:600px; max-height:300px;">
+    <p><strong>매출 차트:</strong></p>
+    <img src="{{ finance.revenue_chart_path | safe }}" alt="매출 시각화" style="display:block; width:600px; max-height:300px;">
+  </div>
+
+  <div class="section">
+    <h2>📰 최신 뉴스 요약</h2>
+    <ul>
+      {% for news in news_list %}
+      <li><strong>{{ news.title }}</strong>: {{ news.summary }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🧾 스펙 비교 요약</h2>
+    <table border="1" cellpadding="5" cellspacing="0">
+      <tr>
+        <th>Source</th><th>학점</th><th>어학</th><th>자격증</th><th>수상</th><th>인턴</th><th>동아리</th>
+      </tr>
+      {% for row in profile_comparison %}
+      <tr>
+        <td>{{ row.source }}</td>
+        <td>{{ row.gpa }}</td>
+        <td>{{ row.language }}</td>
+        <td>{{ row.cert }}</td>
+        <td>{{ row.award }}</td>
+        <td>{{ row.intern }}</td>
+        <td>{{ row.club }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+<div class="section">
+  <h2>📌 JD 정합성 평가</h2>
+  <ul>
+    {% for 질문, 평가 in jd_alignment.items() %}
+      <li><strong>{{ 질문 }}</strong>: {{ 평가 }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="section">
+  <h2>📌 기업 철학 정합성 평가</h2>
+  <ul>
+    {% for 질문, 평가 in philosophy_alignment.items() %}
+      <li><strong>{{ 질문 }}</strong>: {{ 평가 }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+
+  <div class="section">
+    <h2>🗣 면접 요약</h2>
+    <ul>
+      <li><strong>면접 방식:</strong> {{ interview_summary["면접 방식"] }}</li>
+      <li><strong>질문 난이도:</strong> {{ interview_summary["질문 난이도"] }}</li>
+      <li><strong>면접관 태도:</strong> {{ interview_summary["면접관 태도"] }}</li>
+      <li><strong>지원자 팁:</strong> {{ interview_summary["지원자 팁"] }}</li>
+    </ul>
+  </div>
+
+  {% for category, content in interview_qna.items() %}
+    <div class="section">
+      <h2>🧠 {{ category }}</h2>
+      <p><strong>질문 1:</strong> {{ content.question_1 }}</p>
+      <p><strong>답변 1:</strong> {{ content.answer_1 }}</p>
+      <p><strong>질문 2:</strong> {{ content.question_2 }}</p>
+      <p><strong>답변 2:</strong> {{ content.answer_2 }}</p>
+      {% if content.tips %}
+        <ul>
+          {% for tip in content.tips %}
+            <li>{{ tip }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <div class="section">
+    <h2>🧠 인성 질문</h2>
+    <p><strong>질문 1:</strong> {{ interview_soft.question_1 }}</p>
+    <p><strong>답변 1:</strong> {{ interview_soft.answer_1 }}</p>
+    <p><strong>질문 2:</strong> {{ interview_soft.question_2 }}</p>
+    <p><strong>답변 2:</strong> {{ interview_soft.answer_2 }}</p>
+    {% if interview_soft.tips %}
+    <ul>
+      {% for tip in interview_soft.tips %}<li>{{ tip }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+
+</body>
+</html>

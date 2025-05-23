@@ -14,13 +14,14 @@ def run_langgraph(user_input: dict) -> dict:
     graph_builder.add_node("agent_coordinator", coordinator_agent.run)
     graph_builder.add_node("agent_company_info", company_info_agent.run)
 
-    graph_builder.set_entry_point("agent_finance")
+    graph_builder.set_entry_point("agent_news")
 
-    graph_builder.add_edge("agent_finance", "agent_news")
-    graph_builder.add_edge("agent_news", "agent_company_info")
+    graph_builder.add_edge("agent_news", "agent_finance")         # ✅ 수정
+    graph_builder.add_edge("agent_finance", "agent_company_info")
     graph_builder.add_edge("agent_company_info", "agent_resume")
     graph_builder.add_edge("agent_resume", "agent_interview")
     graph_builder.add_edge("agent_interview", "agent_coordinator")
+    graph_builder.set_finish_point("agent_coordinator")
 
     graph_builder.set_finish_point("agent_coordinator")
 
