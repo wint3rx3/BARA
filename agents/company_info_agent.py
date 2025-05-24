@@ -53,4 +53,6 @@ def run(state: dict) -> dict:
         "retry": False
     }
 
-    return state
+    return {
+    "company_info_result": state["company_info_result"]
+}

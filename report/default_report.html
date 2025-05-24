@@ -65,28 +65,28 @@
 
   <div class="section">
     <h2>🏢 기업 일반 정보</h2>
-    <ul>
-      <li><strong>연혁:</strong>
-        <ul>
-          {% for line in company_info["history"].split('\n')[:10] %}
-            <li>{{ line.strip() }}</li>
-          {% endfor %}
-        </ul>
-      </li>
-      <li><strong>본사 주소:</strong> {{ company_info["address"] }}</li>
-      <li><strong>복지 제도:</strong> {{ company_info["welfare"] }}</li>
-      <li><strong>인재상:</strong><br>{{ company_info["talent"] | replace('**', '') | replace('\n', '<br>') | safe }}</li>
-      <li><strong>신년사 요약:</strong> {{ company_info["greeting"] }}</li>
-      <li><strong>채용 사이트:</strong> <a href="{{ company_info["website"] }}">{{ company_info["website"] }}</a></li>
-    </ul>
+      <ul>
+        <li><strong>연혁:</strong>
+          <ul>
+            {% for line in company_info["history"].split('\n')[:10] %}
+              <li>{{ line.strip() }}</li>
+            {% endfor %}
+          </ul>
+        </li>
+        <li><strong>본사 주소:</strong> {{ company_info["address"] }}</li>
+        <li><strong>복지 제도:</strong><br>{{ company_info["welfare"] | replace('\n', '<br>') | safe }}</li>
+        <li><strong>인재상:</strong><br>{{ company_info["talent"] | replace('**', '') | replace('\n', '<br>') | safe }}</li>
+        <li><strong>신년사 요약:</strong><br>{{ company_info["greeting"] | replace('\n', '<br>') | safe }}</li>
+        <li><strong>채용 사이트:</strong> <a href="{{ company_info["website"] }}">{{ company_info["website"] }}</a></li>
+      </ul>
   </div>
 
   <div class="section">
     <h2>📊 재무 요약</h2>
     <p><strong>요약 인사이트:</strong> {{ finance.insight }}</p>
-    <img src="{{ finance.stock_chart_path | safe }}" alt="주가 차트" style="width: 100%; max-width: 600px; margin: 1rem 0;">
-    <img src="{{ finance.revenue_chart_path | safe }}" alt="매출 차트" style="width: 100%; max-width: 600px;">
+    <img src="{{ finance.combined_chart_path | safe }}" alt="주가 및 매출 차트" style="width: 100%; max-width: 800px; margin: 1rem 0;">
   </div>
+
 
   <div class="section">
     <h2>📰 최신 뉴스 요약</h2>

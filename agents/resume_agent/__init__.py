@@ -1,5 +1,3 @@
-# agents/resume_agent/__init__.py
-
 from langgraph.graph import StateGraph
 from langchain_core.runnables import RunnableLambda
 
@@ -30,17 +28,18 @@ def run(state: dict) -> dict:
     compiled = graph.compile()
     final_state = compiled.invoke(state)
 
-    final_state["resume_result"] = {
-        "agent": "AgentResume",
-        "output": {
-            "profile_comparison": final_state.get("profile_comparison", []),
-            "jd_raw": final_state.get("jd_raw", ""),
-            "resume_raw": final_state.get("resume_raw", []),
-            "jd_alignment": final_state.get("jd_alignment", {}),
-            "philosophy_alignment": final_state.get("philosophy_alignment", {})
-        },
-        "error": None,
-        "retry": False
+    # ✅ 결과 구조만 추출해서 반환
+    return {
+        "resume_result": {
+            "agent": "AgentResume",
+            "output": {
+                "profile_comparison": final_state.get("profile_comparison", []),
+                "jd_raw": final_state.get("jd_raw", ""),
+                "resume_raw": final_state.get("resume_raw", []),
+                "jd_alignment": final_state.get("jd_alignment", {}),
+                "philosophy_alignment": final_state.get("philosophy_alignment", {})
+            },
+            "error": None,
+            "retry": False
+        }
     }
-
-    return final_state

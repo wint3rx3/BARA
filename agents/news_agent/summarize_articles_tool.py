@@ -29,6 +29,7 @@ def summarize_article(title: str, content: str, link: str) -> str:
         return f"[요약 실패: {e}]"
 
 def run(state: dict) -> dict:
+
     articles: List[Dict] = state.get("기사리스트", [])
     seen_titles = []
     summaries = []
@@ -46,13 +47,25 @@ def run(state: dict) -> dict:
                 "summary": summary_text
             })
 
-    state["news_result"] = {
-        "agent": "AgentNews",
-        "output": {
-            "articles": summaries
-        },
-        "error": None,
-        "retry": False
-    }
-
+    # ✅ 요약 실패했더라도 반드시 news_result 설정
+    if summaries:
+        state["news_result"] = {
+            "agent": "AgentNews",
+            "output": {
+                "articles": summaries
+            },
+            "error": None,
+            "retry": False
+        }
+    else:
+        state["news_result"] = {
+            "agent": "AgentNews",
+            "output": {
+                "articles": []
+            },
+            "error": "요약된 뉴스가 없습니다.",
+            "retry": True  # ✅ 다시 실행될 수 있도록
+        }
+    print("📤 요약 완료, news_result에 저장됨")
     return state
+

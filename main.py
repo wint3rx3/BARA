@@ -27,9 +27,5 @@ interview_reviews = "\n\n".join(filtered["combined_text"].dropna().tolist())
 # 3. 실행 (✅ user_input만 넘김)
 final_state = run_langgraph(user_input, interview_data, interview_reviews)
 
-from pprint import pprint
-print("✅ interview_result 출력:")
-pprint(final_state.get("interview_result", {}).get("output", {}))
-
 # 4. PDF 생성
 generate_pdf(final_state)

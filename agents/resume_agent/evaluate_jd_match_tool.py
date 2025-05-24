@@ -1,5 +1,3 @@
-# agents/resume_agent/evaluate_jd_match_tool.py
-
 import json
 from llm_client.llm import llm
 
@@ -10,21 +8,34 @@ def run(state: dict) -> dict:
 
     jd_summary = json.dumps(jd, ensure_ascii=False)
 
-    for question, content in resume.items():
+    for question_raw, content in resume.items():
+        question = question_raw.replace("보기", "").strip()
         attitude = ", ".join(content.get("attitude", []))
         experience = ", ".join(content.get("experience", []))
 
         prompt = f"""
+당신은 자기소개서 첨삭 전문가입니다.
+
+아래의 JD 요약과 자기소개서 요약을 참고하여, 사용자가 다음 질문에 답할 때 어떤 내용과 경험을 쓰는 것이 좋은지 구체적으로 조언해 주세요.
+
 [JD 요약 정보]
 {jd_summary}
 
-[자기소개서 요약 정보]
+[자기소개서 요약 키워드]
 - 태도: {attitude}
 - 유관경험: {experience}
 
-자기소개서에 나타난 태도 및 경험이 JD의 필요역량/주요업무와 얼마나 부합하는지 평가하고, 자연어 문장으로 구체적으로 서술해줘.
-태도와 유관경험에 대한 내용을 서술할 필요는 없고, JD의 내용이 자기소개서에 얼마나 드러나있는지만 서술해.
-두 데이터의 말이 똑같을 필요는 없어. JD에서 언급된 추상적인 개념이 자기소개서에 구체적인 경험 및 태도로 서술되어있으면 돼.
+[자기소개서 문항]
+"{question}"
+
+📌 작성자에게 다음과 같은 형식으로 직접 조언하세요:
+- 어떤 JD 항목을 중심으로 쓰면 좋은지
+- 어떤 경험(예: 프로젝트, 협업, 문제해결)을 중심으로 서술하면 좋은지
+- 문단의 흐름이나 키워드 배열은 어떻게 하면 좋은지
+- "부합한다", "잘 맞는다" 같은 추상적인 표현은 절대 사용하지 마세요
+- 독자가 바로 이해할 수 있도록, 구체적인 문장 예시나 표현 방식을 추천하세요
+
+말투는 "~하는 것이 좋습니다." 형태의 조언형 서술로, 총 5~7문장 이내로 구성하세요.
 """
 
         try:

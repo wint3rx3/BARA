@@ -1,5 +1,13 @@
+import re
 from llm_client.llm import llm
 from agents.interview_agent.prompt_template import SUMMARY_SYSTEM_PROMPT, SUMMARY_USER_PROMPT
+
+def remove_label_prefix(text: str, label: str) -> str:
+    """
+    '**면접 방식**:', '면접 방식:', '면접 방식' 등을 제거하고 내용만 반환.
+    """
+    pattern = rf"(\*\*{label}\*\*:?|{label}:?)"
+    return re.sub(pattern, "", text, flags=re.IGNORECASE).strip()
 
 def summarize(state: dict) -> dict:
     company = state["user_input"]["기업명"]
@@ -29,12 +37,14 @@ def summarize(state: dict) -> dict:
     try:
         response = llm.chat.completions.create(model="solar-pro", messages=messages)
         summary_text = response.choices[0].message.content.strip()
+
         lines = [line.strip("1234. ").strip() for line in summary_text.split('\n') if line.strip()]
+
         summary_output = {
-            "면접 방식": lines[0] if len(lines) > 0 else "",
-            "질문 난이도": lines[1] if len(lines) > 1 else "",
-            "면접관 태도": lines[2] if len(lines) > 2 else "",
-            "지원자 팁": lines[3] if len(lines) > 3 else ""
+            "면접 방식": remove_label_prefix(lines[0], "면접 방식") if len(lines) > 0 else "",
+            "질문 난이도": remove_label_prefix(lines[1], "질문 난이도") if len(lines) > 1 else "",
+            "면접관 태도": remove_label_prefix(lines[2], "면접관 태도") if len(lines) > 2 else "",
+            "지원자 팁": remove_label_prefix(lines[3], "지원자 팁") if len(lines) > 3 else ""
         }
 
         state["interview_result"] = {

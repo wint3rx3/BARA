@@ -21,7 +21,6 @@ def parse_qna_text(text: str) -> dict:
         }
     except json.JSONDecodeError as e:
         print("❌ JSON 파싱 실패:", e)
-        print("📄 원본 텍스트:\n", text)
         return {
             "질문 1": "",
             "답변 1": "",

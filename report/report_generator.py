@@ -21,9 +21,6 @@ def generate_pdf(state: dict, output_path: str = "output_report.pdf"):
     env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
     template = env.get_template("default_report.html")
 
-    print("💡 stock_chart_path:", state.get("finance_result", {}).get("output", {}).get("stock_chart_path"))
-    print("💡 revenue_chart_path:", state.get("finance_result", {}).get("output", {}).get("revenue_chart_path"))
-
     interview_result = state.get("interview_result", {}).get("output", {}) or {}
     resume_output = state.get("resume_result", {}).get("output", {}) or {}
 

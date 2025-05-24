@@ -20,7 +20,10 @@ def generate_qna(state: dict) -> dict:
         return state
 
     # 1. 기업명/직무명 필터
-    group_df = df[(df["기업명"] == company) & (df["직무명"] == job)]
+    group_df = df[
+        df["기업명"].str.contains(company, case=False, na=False) &
+        df["직무명"].str.contains(job, case=False, na=False)
+    ]
     if group_df.empty:
         print("⚠️ 필터링된 데이터 없음 → 전체에서 샘플링")
         group_df = df.sample(min(30, len(df)))  # fallback: 전체에서 샘플링
@@ -70,7 +73,6 @@ def generate_qna(state: dict) -> dict:
         try:
             response = llm.chat.completions.create(model="solar-pro", messages=messages)
             text = response.choices[0].message.content.strip()
-            print(f"🧾 LLM 응답:\n{text}")  # ✅ 이거 추가
             parsed = parse_qna_text(text)
             qna_output[key] = parsed
         except Exception as e:

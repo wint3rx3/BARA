@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional, Literal, List, Dict
+from typing import TypedDict, Optional, Literal, List, Annotated, Dict
 from pandas import DataFrame
 
 # 🔹 1. CompanyInfo
@@ -86,9 +86,22 @@ class InterviewResult(TypedDict):
     error: Optional[str]
     retry: bool
 
+# 🔹 Coord 검증용 중간 결과
+class CoordStage1Result(TypedDict):
+    agent: Literal["CoordStage1"]
+    output: dict
+    retry: bool
+    error: Optional[str]
+
+class CoordStage2Result(TypedDict):
+    agent: Literal["CoordStage2"]
+    output: dict
+    retry: bool
+    error: Optional[str]
+
 # 🔹 전체 상태
 class State(TypedDict):
-    user_input: dict
+    user_input: Annotated[dict, "input"]
     company_info_result: Optional[CompanyInfoResult]
     news_result: Optional[NewsResult]
     finance_result: Optional[FinanceResult]
@@ -97,7 +110,9 @@ class State(TypedDict):
     coord_result: Optional[dict]
     pdf_result: Optional[dict]
     interview_data: Optional[DataFrame]
-    interview_reviews: Optional[str]     
+    interview_reviews: Optional[str]
+    coord_stage_1_result: Optional[CoordStage1Result]
+    coord_stage_2_result: Optional[CoordStage2Result]
 
 def get_initial_state(user_input: dict) -> State:
     return {
@@ -108,5 +123,8 @@ def get_initial_state(user_input: dict) -> State:
         "interview_result": None,
         "coord_result": None,
         "pdf_result": None,
-        "company_info_result": None
+        "company_info_result": None,
+        "coord_stage_1_result": None,
+        "coord_stage_2_result": None
     }
+

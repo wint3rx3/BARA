@@ -1,37 +1,88 @@
-from langgraph.graph import StateGraph, END
-from agents import news_agent, finance_agent, resume_agent, interview_agent, coordinator_agent, company_info_agent  
+from langgraph.graph import StateGraph
+from agents import (
+    news_agent, finance_agent, resume_agent, interview_agent,
+    coordinator_agent, company_info_agent, coord_stage_1, coord_stage_2
+)
 from graph.state_schema import get_initial_state, State
 
+# ✅ 각 에이전트 실행 래퍼 - user_input 제거
+def run_news_agent(state):
+    updated = news_agent.run(state)
+    print("🧪 run_news_agent 반환 키:", list(updated.keys()))
+    updated.pop("user_input", None)
+    state.update(updated)
+    return state
+
+def run_company_info_agent(state):
+    updated = company_info_agent.run(state)
+    print("🧪 run_company_info_agent 반환 키:", list(updated.keys()))
+    updated.pop("user_input", None)
+    state.update(updated)
+    return state
+
+def run_finance_agent(state):
+    updated = finance_agent.run(state)
+    print("🧪 run_finance_agent 반환 키:", list(updated.keys()))
+    updated.pop("user_input", None)
+    state.update(updated)
+    return state
+
+def run_resume_agent(state):
+    updated = resume_agent.run(state)
+    print("🧪 run_resume_agent 반환 키:", list(updated.keys()))
+    updated.pop("user_input", None)
+    state.update(updated)
+    return state
+
+def run_interview_agent(state):
+    updated = interview_agent.run(state)
+    print("🧪 run_interview_agent 반환 키:", list(updated.keys()))
+    updated.pop("user_input", None)
+    state.update(updated)
+    return state
+
+# ✅ 전체 LangGraph 실행 함수
 def run_langgraph(user_input: dict, interview_data=None, interview_reviews=None) -> dict:
     state = get_initial_state(user_input)
-
     if interview_data is not None:
         state["interview_data"] = interview_data
     if interview_reviews is not None:
         state["interview_reviews"] = interview_reviews
 
-    graph_builder = StateGraph(State)
+    builder = StateGraph(State)
 
-    graph_builder.add_node("agent_finance", finance_agent.run)
-    graph_builder.add_node("agent_news", news_agent.run)
-    graph_builder.add_node("agent_resume", resume_agent.run)
-    graph_builder.add_node("agent_interview", interview_agent.run)
-    graph_builder.add_node("agent_coordinator", coordinator_agent.run)
-    graph_builder.add_node("agent_company_info", company_info_agent.run)
+    # 시작점
+    builder.add_node("start", lambda s: s)
+    builder.set_entry_point("start")
 
-    graph_builder.set_entry_point("agent_news")
+    # 순차 실행 노드 추가
+    builder.add_node("agent_news", run_news_agent)
+    builder.add_edge("start", "agent_news")
 
-    graph_builder.add_edge("agent_news", "agent_finance")         # ✅ 수정
-    graph_builder.add_edge("agent_finance", "agent_company_info")
-    graph_builder.add_edge("agent_company_info", "agent_resume")
-    graph_builder.add_edge("agent_resume", "agent_interview")
-    graph_builder.add_edge("agent_interview", "agent_coordinator")
-    graph_builder.set_finish_point("agent_coordinator")
+    builder.add_node("agent_company_info", run_company_info_agent)
+    builder.add_edge("agent_news", "agent_company_info")
 
-    graph_builder.set_finish_point("agent_coordinator")
+    builder.add_node("agent_finance", run_finance_agent)
+    builder.add_edge("agent_company_info", "agent_finance")
 
-    # langgraph_runner.py (run_langgraph 마지막)
-    graph = graph_builder.compile()
-    result = graph.invoke(state)
+    builder.add_node("coord_stage_1", coord_stage_1.run)
+    builder.add_edge("agent_finance", "coord_stage_1")
 
-    return result
+    builder.add_node("agent_resume", run_resume_agent)
+    builder.add_edge("coord_stage_1", "agent_resume")
+
+    builder.add_node("agent_interview", run_interview_agent)
+    builder.add_edge("agent_resume", "agent_interview")
+
+    builder.add_node("coord_stage_2", coord_stage_2.run)
+    builder.add_edge("agent_interview", "coord_stage_2")
+
+    builder.add_node("agent_coordinator", coordinator_agent.run)
+    builder.add_edge("coord_stage_2", "agent_coordinator")
+
+    # 종료점 설정
+    builder.set_finish_point("agent_coordinator")
+
+    # 실행
+    graph = builder.compile()
+    return graph.invoke(state)
