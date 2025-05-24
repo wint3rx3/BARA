@@ -11,7 +11,7 @@ def summarize_article(title: str, content: str, link: str) -> str:
     messages = [
         {
             "role": "system",
-            "content": "너는 기사 요약 전문가야. 내용을 100~500자 사이로 요약하고 링크를 포함해줘."
+            "content": "너는 기사 요약 전문가야. 내용을 100~300자 사이로 요약하고 링크를 포함해줘."
         },
         {
             "role": "user",

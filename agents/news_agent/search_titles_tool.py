@@ -42,7 +42,6 @@ def search_recent_news(keyword: str) -> list:
         f"{keyword} 투자 확대 소식",
         f"{keyword} 인재 채용 강화",
         f"{keyword} AI 전략 공개",
-        f"{keyword}와 경쟁사 비교 분석"
     ]
 
 

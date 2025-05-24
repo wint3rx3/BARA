@@ -1,21 +1,66 @@
-<!-- report/templates/default_report.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>기업 분석 보고서</title>
+  <title>{{ 기업명 }} - {{ 직무명 }} 분석 보고서</title>
   <style>
     body {
-      font-family: 'Noto Sans', 'Noto Color Emoji', 'Segoe UI Emoji', sans-serif;
+      font-family: 'Noto Sans KR', sans-serif;
       margin: 2rem;
-      line-height: 1.6;
+      color: #333;
+      line-height: 1.8;
     }
-    h1, h2 { color: #2a2a2a; }
-    img { max-width: 100%; }
-    .section { margin-bottom: 2rem; }
+    h1 {
+      font-size: 2.2em;
+      color: #1a237e;
+      border-bottom: 3px solid #1a237e;
+      padding-bottom: 0.5rem;
+    }
+    h2 {
+      color: #2a2a2a;
+      margin-top: 2.5rem;
+      border-left: 6px solid #2196f3;
+      padding-left: 1rem;
+    }
+    h3 {
+      color: #1565c0;
+      margin-top: 1.5rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.6rem;
+      text-align: center;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+    ul {
+      list-style-type: disc;
+      padding-left: 1.5rem;
+    }
+    .highlight {
+      background-color: #fff9c4;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+    }
+    .tip {
+      background-color: #e3f2fd;
+      padding: 0.5rem;
+      border-left: 4px solid #64b5f6;
+      margin-top: 0.5rem;
+    }
+    .section {
+      margin-bottom: 2rem;
+    }
   </style>
 </head>
 <body>
+
   <h1>{{ 기업명 }} - {{ 직무명 }} 분석 보고서</h1>
 
   <div class="section">
@@ -30,40 +75,33 @@
       </li>
       <li><strong>본사 주소:</strong> {{ company_info["address"] }}</li>
       <li><strong>복지 제도:</strong> {{ company_info["welfare"] }}</li>
-      <li><strong>인재상:</strong><br>
-        {{ company_info["talent"]
-            | replace('**', '')
-            | replace('\n', '<br>')
-            | safe }}
-      </li>
+      <li><strong>인재상:</strong><br>{{ company_info["talent"] | replace('**', '') | replace('\n', '<br>') | safe }}</li>
+      <li><strong>신년사 요약:</strong> {{ company_info["greeting"] }}</li>
       <li><strong>채용 사이트:</strong> <a href="{{ company_info["website"] }}">{{ company_info["website"] }}</a></li>
-      <li><strong>신년사:</strong> {{ company_info["greeting"] }}</li>
     </ul>
   </div>
 
   <div class="section">
     <h2>📊 재무 요약</h2>
     <p><strong>요약 인사이트:</strong> {{ finance.insight }}</p>
-    <p><strong>주가 차트:</strong></p>
-    <img src="{{ finance.stock_chart_path | safe }}" alt="주가 시각화" style="display:block; width:600px; max-height:300px;">
-    <p><strong>매출 차트:</strong></p>
-    <img src="{{ finance.revenue_chart_path | safe }}" alt="매출 시각화" style="display:block; width:600px; max-height:300px;">
+    <img src="{{ finance.stock_chart_path | safe }}" alt="주가 차트" style="width: 100%; max-width: 600px; margin: 1rem 0;">
+    <img src="{{ finance.revenue_chart_path | safe }}" alt="매출 차트" style="width: 100%; max-width: 600px;">
   </div>
 
   <div class="section">
     <h2>📰 최신 뉴스 요약</h2>
     <ul>
       {% for news in news_list %}
-        <li><strong>{{ news.title }}</strong>: {{ news.summary }}</li>
+        <li><span class="highlight">{{ news.title }}</span>: {{ news.summary }}</li>
       {% endfor %}
     </ul>
   </div>
 
   <div class="section">
-    <h2>🧾 스펙 비교 요약</h2>
-    <table border="1" cellpadding="5" cellspacing="0">
+    <h2>🧾 스펙 비교</h2>
+    <table>
       <tr>
-        <th>Source</th><th>학점</th><th>어학</th><th>자격증</th><th>수상</th><th>인턴</th><th>동아리</th>
+        <th>구분</th><th>학점</th><th>어학</th><th>자격증</th><th>수상</th><th>인턴</th><th>동아리</th>
       </tr>
       {% for row in profile_comparison %}
         <tr>
@@ -80,21 +118,17 @@
   </div>
 
   <div class="section">
-    <h2>📌 JD 정합성 평가</h2>
-    <ul>
-      {% for 질문, 평가 in jd_alignment.items() %}
-        <li><strong>{{ 질문 }}</strong>: {{ 평가 }}</li>
-      {% endfor %}
-    </ul>
-  </div>
+    <h2>📄 자기소개서 분석</h2>
 
-  <div class="section">
-    <h2>📌 기업 철학 정합성 평가</h2>
-    <ul>
-      {% for 질문, 평가 in philosophy_alignment.items() %}
-        <li><strong>{{ 질문 }}</strong>: {{ 평가 }}</li>
-      {% endfor %}
-    </ul>
+    <h3>📌 JD 기반 평가</h3>
+    {% for 질문, 평가 in jd_alignment.items() %}
+      <p><strong>{{ 질문 }}</strong><br>{{ 평가 }}</p>
+    {% endfor %}
+
+    <h3>📌 기업 가치와의 일치도</h3>
+    {% for 질문, 평가 in philosophy_alignment.items() %}
+      <p><strong>{{ 질문 }}</strong><br>{{ 평가 }}</p>
+    {% endfor %}
   </div>
 
   <div class="section">
@@ -107,22 +141,24 @@
     </ul>
   </div>
 
-  {% for category, content in interview_hard.items() %}
-    <div class="section">
-      <h2>🧠 {{ category }}</h2>
-      <p><strong>질문 1:</strong> {{ content["질문 1"] }}</p>
-      <p><strong>답변 1:</strong> {{ content["답변 1"] }}</p>
-      <p><strong>질문 2:</strong> {{ content["질문 2"] }}</p>
-      <p><strong>답변 2:</strong> {{ content["답변 2"] }}</p>
-      {% if content["tips"] %}
-        <ul>
-          {% for tip in content["tips"] %}
-            <li>{{ tip }}</li>
-          {% endfor %}
-        </ul>
+  <div class="section">
+    <h2>🎤 예상 면접 질문 및 답변</h2>
+    {% for category, content in interview_hard.items() %}
+      {% if content["질문 1"] %}
+        <h3>🧠 {{ category }}</h3>
+        <p><strong>질문 1:</strong> {{ content["질문 1"] }}</p>
+        <p><strong>답변 1:</strong> {{ content["답변 1"] }}</p>
+        <p><strong>질문 2:</strong> {{ content["질문 2"] }}</p>
+        <p><strong>답변 2:</strong> {{ content["답변 2"] }}</p>
+        {% if content["tips"] %}
+          <div class="tip">
+            <strong>💡 준비 팁</strong>
+            <ul>{% for tip in content["tips"] %}<li>{{ tip }}</li>{% endfor %}</ul>
+          </div>
+        {% endif %}
       {% endif %}
-    </div>
-  {% endfor %}
+    {% endfor %}
+  </div>
 
 </body>
 </html>
