@@ -1,9 +1,11 @@
 # agents/company_info_agent.py
 
 import pandas as pd
+import os
 from pathlib import Path
 
-DATA_DIR = Path.cwd() / "data"
+BASE_DIR = Path(os.path.dirname(__file__)).parent  # ⬅️ 한 단계만
+DATA_DIR = BASE_DIR / "data"
 
 def run(state: dict) -> dict:
     company = state["user_input"]["기업명"]

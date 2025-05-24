@@ -3,21 +3,28 @@ import pandas as pd
 
 def flatten_language(language) -> str:
     if isinstance(language, str):
-        return language.strip()  # ✅ 사용자 문자열 그대로 유지
+        try:
+            language = ast.literal_eval(language)
+        except Exception:
+            return language.strip()
     if isinstance(language, dict):
-        return ", ".join([f"{k} {v}" for k, v in language.items()])
+        return ", ".join(f"{k}: {v}" for k, v in language.items())
     return str(language).strip() if pd.notna(language) else ""
 
 def flatten_field(field) -> str:
     if isinstance(field, str):
-        return field.strip()  # ✅ 사용자 문자열 그대로 유지
+        try:
+            field = ast.literal_eval(field)
+        except Exception:
+            return field.strip()
     if isinstance(field, list):
-        return ", ".join(str(x) for x in field if str(x).strip() not in {"0.0", "0", "[]", "{}"})
+        return ", ".join(str(x) for x in field if str(x).strip())
     if isinstance(field, dict):
-        return ", ".join([f"{k} {v}" for k, v in field.items()])
-    if isinstance(field, (float, int)) and float(field) == 0.0:
-        return ""
+        return ", ".join(f"{k}: {v}" for k, v in field.items())
+    if isinstance(field, (float, int)):
+        return str(int(field)) if float(field).is_integer() else str(field)
     return str(field).strip() if pd.notna(field) else ""
+
 
 def run(state: dict) -> dict:
     df = pd.read_csv("data/resume_data.csv")

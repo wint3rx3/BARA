@@ -92,7 +92,7 @@
     <h2>📰 최신 뉴스 요약</h2>
     <ul>
       {% for news in news_list %}
-        <li><span class="highlight">{{ news.title }}</span>: {{ news.summary }}</li>
+        <li>{{ news.title }}</span><br>{{ news.summary }}</li>
       {% endfor %}
     </ul>
   </div>

@@ -44,7 +44,8 @@ def run(state: dict) -> dict:
         if 100 <= len(summary_text) <= 500:
             summaries.append({
                 "title": title,
-                "summary": summary_text
+                "summary": summary_text,
+                "link": article["링크"]
             })
 
     # ✅ 요약 실패했더라도 반드시 news_result 설정
