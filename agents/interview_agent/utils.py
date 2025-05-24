@@ -1,18 +1,31 @@
-# agents/interview_agent/utils.py
+import json
 
-import re
+def flatten_sar(answer):
+    if isinstance(answer, dict):
+        return "\n".join(f"{k}: {v}" for k, v in answer.items() if v)
+    return answer
 
-def parse_qna_text(text: str):
-    q1 = re.search(r"예상 질문 1: (.+)", text)
-    a1 = re.search(r"모범 답안 1: (.+?)(?=예상 질문 2:|<|$)", text, flags=re.DOTALL)
-    q2 = re.search(r"예상 질문 2: (.+)", text)
-    a2 = re.search(r"모범 답안 2: (.+?)(?=<|$)", text, flags=re.DOTALL)
-    tips_match = re.search(r"<.+?>\n(.+?)(?=\n\n|$)", text, flags=re.DOTALL)
-    tips = [line.strip(" 1234567890.-") for line in tips_match.group(1).split("\n") if line.strip()] if tips_match else []
-    return {
-        "question_1": q1.group(1).strip() if q1 else "",
-        "answer_1": a1.group(1).strip() if a1 else "",
-        "question_2": q2.group(1).strip() if q2 else "",
-        "answer_2": a2.group(1).strip() if a2 else "",
-        "tips": tips
-    }
+def clean_json_text(text: str) -> str:
+    return text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+
+def parse_qna_text(text: str) -> dict:
+    try:
+        cleaned = clean_json_text(text)
+        parsed = json.loads(cleaned)
+        return {
+            "질문 1": parsed.get("질문 1", ""),
+            "답변 1": flatten_sar(parsed.get("답변 1", "")),
+            "질문 2": parsed.get("질문 2", ""),
+            "답변 2": flatten_sar(parsed.get("답변 2", "")),
+            "tips": parsed.get("tips", []),
+        }
+    except json.JSONDecodeError as e:
+        print("❌ JSON 파싱 실패:", e)
+        print("📄 원본 텍스트:\n", text)
+        return {
+            "질문 1": "",
+            "답변 1": "",
+            "질문 2": "",
+            "답변 2": "",
+            "tips": []
+        }

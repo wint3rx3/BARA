@@ -102,15 +102,22 @@ def run(state: dict) -> dict:
         }
         return state
 
-    state["finance_result"] = {
-        "agent": "AgentFinance",
-        "output": {
-            "stock_chart_path": "charts/stock_chart.png",
-            "revenue_chart_path": "charts/revenue_chart.png",
-            "insight": insight_text
-        },
-        "error": None,
-        "retry": False
-    }
+    # analyze_insight.py 내부 run 함수 말미에 다음과 같이 수정
+    if "finance_result" not in state or not isinstance(state["finance_result"], dict):
+        state["finance_result"] = {
+            "agent": "AgentFinance",
+            "output": {},
+            "error": None,
+            "retry": False
+        }
+
+    if "output" not in state["finance_result"] or not isinstance(state["finance_result"]["output"], dict):
+        state["finance_result"]["output"] = {}
+
+    # ⬇️ 기존 경로를 덮어쓰지 않고 insight만 추가
+    state["finance_result"]["output"]["insight"] = insight_text
+    state["finance_result"]["agent"] = "AgentFinance"
+    state["finance_result"]["error"] = None
+    state["finance_result"]["retry"] = False
 
     return state

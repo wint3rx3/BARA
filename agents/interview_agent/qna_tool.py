@@ -1,5 +1,3 @@
-# agents/interview_agent/qna_tool.py
-
 import pandas as pd
 from llm_client.llm import llm
 from agents.interview_agent.prompt_template import QNA_SYSTEM_PROMPT, QNA_USER_PROMPT
@@ -11,6 +9,8 @@ def generate_qna(state: dict) -> dict:
     job = state["user_input"]["직무명"]
 
     if df is None or df.empty:
+        print("⚠️ interview_data가 없음 → QnA 생성 생략")
+        state.setdefault("interview_result", {"agent": "AgentInterview", "output": {}, "error": None, "retry": False})
         state["interview_result"]["output"].update({
             "potential": {},
             "communication": {},
@@ -19,13 +19,18 @@ def generate_qna(state: dict) -> dict:
         })
         return state
 
+    # 1. 기업명/직무명 필터
     group_df = df[(df["기업명"] == company) & (df["직무명"] == job)]
+    if group_df.empty:
+        print("⚠️ 필터링된 데이터 없음 → 전체에서 샘플링")
+        group_df = df.sample(min(30, len(df)))  # fallback: 전체에서 샘플링
 
+    # 2. category 매핑
     category_map = {
-        1: "potential",      # 잠재역량
-        2: "communication",  # 조직관계역량
-        3: "competency",     # 직무역량
-        4: "personality"     # 인성역량
+        1: "potential",
+        2: "communication",
+        3: "competency",
+        4: "personality"
     }
 
     label_map = {
@@ -43,7 +48,12 @@ def generate_qna(state: dict) -> dict:
             qna_output[key] = {}
             continue
 
-        examples = "\n\n".join(cat_df["combined_text"].dropna().sample(min(3, len(cat_df))))
+        try:
+            examples = "\n\n".join(cat_df["combined_text"].dropna().sample(min(3, len(cat_df))))
+        except Exception as e:
+            qna_output[key] = {"error": f"샘플링 실패: {e}"}
+            continue
+
         messages = [
             {"role": "system", "content": QNA_SYSTEM_PROMPT},
             {
@@ -60,9 +70,13 @@ def generate_qna(state: dict) -> dict:
         try:
             response = llm.chat.completions.create(model="solar-pro", messages=messages)
             text = response.choices[0].message.content.strip()
-            qna_output[key] = parse_qna_text(text)
+            print(f"🧾 LLM 응답:\n{text}")  # ✅ 이거 추가
+            parsed = parse_qna_text(text)
+            qna_output[key] = parsed
         except Exception as e:
             qna_output[key] = {"error": f"QnA 생성 실패: {e}"}
 
+
+    state.setdefault("interview_result", {"agent": "AgentInterview", "output": {}, "error": None, "retry": False})
     state["interview_result"]["output"].update(qna_output)
     return state

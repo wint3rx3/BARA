@@ -2,8 +2,13 @@ from langgraph.graph import StateGraph, END
 from agents import news_agent, finance_agent, resume_agent, interview_agent, coordinator_agent, company_info_agent  
 from graph.state_schema import get_initial_state, State
 
-def run_langgraph(user_input: dict) -> dict:
+def run_langgraph(user_input: dict, interview_data=None, interview_reviews=None) -> dict:
     state = get_initial_state(user_input)
+
+    if interview_data is not None:
+        state["interview_data"] = interview_data
+    if interview_reviews is not None:
+        state["interview_reviews"] = interview_reviews
 
     graph_builder = StateGraph(State)
 

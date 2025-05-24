@@ -54,7 +54,7 @@
     <h2>📰 최신 뉴스 요약</h2>
     <ul>
       {% for news in news_list %}
-      <li><strong>{{ news.title }}</strong>: {{ news.summary }}</li>
+        <li><strong>{{ news.title }}</strong>: {{ news.summary }}</li>
       {% endfor %}
     </ul>
   </div>
@@ -66,37 +66,36 @@
         <th>Source</th><th>학점</th><th>어학</th><th>자격증</th><th>수상</th><th>인턴</th><th>동아리</th>
       </tr>
       {% for row in profile_comparison %}
-      <tr>
-        <td>{{ row.source }}</td>
-        <td>{{ row.gpa }}</td>
-        <td>{{ row.language }}</td>
-        <td>{{ row.cert }}</td>
-        <td>{{ row.award }}</td>
-        <td>{{ row.intern }}</td>
-        <td>{{ row.club }}</td>
-      </tr>
+        <tr>
+          <td>{{ row.source }}</td>
+          <td>{{ row.gpa }}</td>
+          <td>{{ row.language }}</td>
+          <td>{{ row.cert }}</td>
+          <td>{{ row.award }}</td>
+          <td>{{ row.intern }}</td>
+          <td>{{ row.club }}</td>
+        </tr>
       {% endfor %}
     </table>
   </div>
 
-<div class="section">
-  <h2>📌 JD 정합성 평가</h2>
-  <ul>
-    {% for 질문, 평가 in jd_alignment.items() %}
-      <li><strong>{{ 질문 }}</strong>: {{ 평가 }}</li>
-    {% endfor %}
-  </ul>
-</div>
+  <div class="section">
+    <h2>📌 JD 정합성 평가</h2>
+    <ul>
+      {% for 질문, 평가 in jd_alignment.items() %}
+        <li><strong>{{ 질문 }}</strong>: {{ 평가 }}</li>
+      {% endfor %}
+    </ul>
+  </div>
 
-<div class="section">
-  <h2>📌 기업 철학 정합성 평가</h2>
-  <ul>
-    {% for 질문, 평가 in philosophy_alignment.items() %}
-      <li><strong>{{ 질문 }}</strong>: {{ 평가 }}</li>
-    {% endfor %}
-  </ul>
-</div>
-
+  <div class="section">
+    <h2>📌 기업 철학 정합성 평가</h2>
+    <ul>
+      {% for 질문, 평가 in philosophy_alignment.items() %}
+        <li><strong>{{ 질문 }}</strong>: {{ 평가 }}</li>
+      {% endfor %}
+    </ul>
+  </div>
 
   <div class="section">
     <h2>🗣 면접 요약</h2>
@@ -108,35 +107,22 @@
     </ul>
   </div>
 
-  {% for category, content in interview_qna.items() %}
+  {% for category, content in interview_hard.items() %}
     <div class="section">
       <h2>🧠 {{ category }}</h2>
-      <p><strong>질문 1:</strong> {{ content.question_1 }}</p>
-      <p><strong>답변 1:</strong> {{ content.answer_1 }}</p>
-      <p><strong>질문 2:</strong> {{ content.question_2 }}</p>
-      <p><strong>답변 2:</strong> {{ content.answer_2 }}</p>
-      {% if content.tips %}
+      <p><strong>질문 1:</strong> {{ content["질문 1"] }}</p>
+      <p><strong>답변 1:</strong> {{ content["답변 1"] }}</p>
+      <p><strong>질문 2:</strong> {{ content["질문 2"] }}</p>
+      <p><strong>답변 2:</strong> {{ content["답변 2"] }}</p>
+      {% if content["tips"] %}
         <ul>
-          {% for tip in content.tips %}
+          {% for tip in content["tips"] %}
             <li>{{ tip }}</li>
           {% endfor %}
         </ul>
       {% endif %}
     </div>
   {% endfor %}
-
-  <div class="section">
-    <h2>🧠 인성 질문</h2>
-    <p><strong>질문 1:</strong> {{ interview_soft.question_1 }}</p>
-    <p><strong>답변 1:</strong> {{ interview_soft.answer_1 }}</p>
-    <p><strong>질문 2:</strong> {{ interview_soft.question_2 }}</p>
-    <p><strong>답변 2:</strong> {{ interview_soft.answer_2 }}</p>
-    {% if interview_soft.tips %}
-    <ul>
-      {% for tip in interview_soft.tips %}<li>{{ tip }}</li>{% endfor %}
-    </ul>
-    {% endif %}
-  </div>
 
 </body>
 </html>

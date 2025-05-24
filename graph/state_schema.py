@@ -1,4 +1,5 @@
 from typing import TypedDict, Optional, Literal, List, Dict
+from pandas import DataFrame
 
 # 🔹 1. CompanyInfo
 class CompanyInfoOutput(TypedDict):
@@ -94,7 +95,9 @@ class State(TypedDict):
     resume_result: Optional[ResumeResult]
     interview_result: Optional[InterviewResult]
     coord_result: Optional[dict]
-    pdf_result: Optional[dict] 
+    pdf_result: Optional[dict]
+    interview_data: Optional[DataFrame]
+    interview_reviews: Optional[str]     
 
 def get_initial_state(user_input: dict) -> State:
     return {
