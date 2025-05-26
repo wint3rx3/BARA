@@ -125,18 +125,35 @@
   </div>
 
   <div class="section">
-    <h2>📄 자기소개서 분석</h2>
+  <h2>📋 채용공고 요약</h2>
 
-    <h3>📌 JD 기반 평가</h3>
-    {% for 질문, 평가 in jd_alignment.items() %}
-      <p><strong>{{ 질문 }}</strong><br>{{ 평가 }}</p>
-    {% endfor %}
+  <h3>🛠 주요 업무 (Responsibilities)</h3>
+    <ul>
+      {% for item in jd_structured.responsibilities %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
 
-    <h3>📌 기업 가치와의 일치도</h3>
-    {% for 질문, 평가 in philosophy_alignment.items() %}
-      <p><strong>{{ 질문 }}</strong><br>{{ 평가 }}</p>
+    <h3>🎯 필요 역량 (Requirements)</h3>
+    <ul>
+      {% for item in jd_structured.requirements %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>📄 자기소개서 질문별 분석</h2>
+
+    {% for item in resume_questions %}
+      <div style="margin-bottom: 1.5rem;">
+        <p><strong>📝 질문:</strong> {{ item.question }}</p>
+        <p><strong>📌 직무 설명 관련 피드백:</strong><br>{{ item.jd_feedback | default("분석 없음") }}</p>
+        <p><strong>🏢 기업 철학 관련 피드백:</strong><br>{{ item.philosophy_feedback | default("분석 없음") }}</p>
+      </div>
     {% endfor %}
   </div>
+
 
   <div class="section">
     <h2>🗣 면접 요약</h2>

@@ -18,14 +18,22 @@ def run(state: dict) -> dict:
         q1, q2 = "질문 없음", "질문 없음"
         answers = ["{}", "{}"]
 
-    topic_dict = {}
+    resume_questions = []
     for q, ans in zip([q1, q2], answers):
         try:
             parsed = ast.literal_eval(ans)
-        except:
+        except Exception:
             parsed = {"value": [], "attitude": [], "experience": []}
-        topic_dict[q] = parsed
+
+        resume_questions.append({
+            "question": q,
+            "value": parsed.get("value", []),
+            "attitude": parsed.get("attitude", []),
+            "experience": parsed.get("experience", []),
+            "jd_feedback": "",  # 빈값으로 초기화
+            "philosophy_feedback": ""
+        })
 
     state["resume_raw"] = answers
-    state["resume_topics"] = topic_dict
+    state["resume_questions"] = resume_questions  # ✅ 핵심 변경점
     return state

@@ -28,7 +28,6 @@ def run(state: dict) -> dict:
     compiled = graph.compile()
     final_state = compiled.invoke(state)
 
-    # ✅ 결과 구조만 추출해서 반환
     return {
         "resume_result": {
             "agent": "AgentResume",
@@ -36,8 +35,8 @@ def run(state: dict) -> dict:
                 "profile_comparison": final_state.get("profile_comparison", []),
                 "jd_raw": final_state.get("jd_raw", ""),
                 "resume_raw": final_state.get("resume_raw", []),
-                "jd_alignment": final_state.get("jd_alignment", {}),
-                "philosophy_alignment": final_state.get("philosophy_alignment", {})
+                "jd_structured": final_state.get("jd_structured", {}),
+                "resume_questions": final_state.get("resume_questions", [])
             },
             "error": None,
             "retry": False

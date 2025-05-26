@@ -9,7 +9,7 @@ from graph.state_schema import get_initial_state, State
 def run_news_agent(state):
     updated = news_agent.run(state)
     print("🧪 run_news_agent 반환 키:", list(updated.keys()))
-    updated.pop("user_input", None)
+    #updated.pop("user_input", None)
     state.update(updated)
     return state
 

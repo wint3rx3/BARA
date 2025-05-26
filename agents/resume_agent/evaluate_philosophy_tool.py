@@ -3,19 +3,14 @@
 import json
 from llm_client.llm import llm
 
-import json
-from llm_client.llm import llm
-
 def run(state: dict) -> dict:
-    resume = state.get("resume_topics", {})
+    questions = state.get("resume_questions", [])
     values = json.dumps(state.get("company_info_result", {}).get("output", {}).get("talent", ""), ensure_ascii=False)
     vision = json.dumps(state.get("company_info_result", {}).get("output", {}).get("greeting", ""), ensure_ascii=False)
 
-    result = {}
-
-    for question_text, content in resume.items():
-        question = question_text.replace("보기", "").strip()
-        value = " ".join(content.get("value", []))
+    for item in questions:
+        question = item["question"]
+        value_keywords = " ".join(item.get("value", []))
 
         prompt = f"""
 당신은 자기소개서를 코칭하는 전문가입니다. 아래 정보를 참고하여, 주어진 질문에 대해 자기소개서를 어떻게 작성하면 기업 철학과 자연스럽게 연결될 수 있는지 **구체적인 작성 전략**을 제시해 주세요.
@@ -25,7 +20,7 @@ def run(state: dict) -> dict:
 - 신년사 요약: {vision}
 
 [자기소개서 키워드 요약]
-- {value}
+- {value_keywords}
 
 [자기소개서 문항]
 "{question}"
@@ -47,9 +42,8 @@ def run(state: dict) -> dict:
                 model="solar-pro",
                 messages=[{"role": "user", "content": prompt}]
             )
-            result[question] = response.choices[0].message.content.strip()
+            item["philosophy_feedback"] = response.choices[0].message.content.strip()
         except Exception as e:
-            result[question] = f"[오류 발생: {e}]"
+            item["philosophy_feedback"] = f"[오류 발생: {e}]"
 
-    state["philosophy_alignment"] = result
     return state

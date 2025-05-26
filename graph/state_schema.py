@@ -51,12 +51,21 @@ class FinanceResult(TypedDict):
     retry: bool
 
 # 🔹 4. Resume
+
+class ResumeQuestion(TypedDict):
+    question: str
+    value: List[str]
+    attitude: List[str]
+    experience: List[str]
+    jd_feedback: str
+    philosophy_feedback: str
+
 class ResumeOutput(TypedDict):
     profile_comparison: list  # 합격자 vs 사용자 스펙 리스트
     jd_raw: str               # JD 원문 (JSON string)
-    resume_raw: list[str]          # 자소서 원문 (답변1, 답변2)
-    jd_alignment: dict        # JD와 자소서 정합성 평가 결과
-    philosophy_alignment: dict  # 기업 철학과 자소서 정합성 평가
+    resume_raw: List[str]     # 자소서 원문 (답변1, 답변2)
+    jd_structured: Dict[str, List[str]]  # responsibilities, requirements
+    resume_questions: List[ResumeQuestion]  # ✅ 질문 중심 구조
 
 class ResumeResult(TypedDict):
     agent: Literal["AgentResume"]

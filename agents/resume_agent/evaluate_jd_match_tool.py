@@ -3,49 +3,50 @@ from llm_client.llm import llm
 
 def run(state: dict) -> dict:
     jd = state.get("jd_structured", {})
-    resume = state.get("resume_topics", {})
-    result = {}
+    questions = state.get("resume_questions", [])
 
     jd_summary = json.dumps(jd, ensure_ascii=False)
 
-    for question_raw, content in resume.items():
-        question = question_raw.replace("보기", "").strip()
-        attitude = ", ".join(content.get("attitude", []))
-        experience = ", ".join(content.get("experience", []))
+    for item in questions:
+        question = item["question"]
+        attitude = ", ".join(item.get("attitude", []))
+        experience = ", ".join(item.get("experience", []))
 
         prompt = f"""
-당신은 자기소개서 첨삭 전문가입니다.
+당신은 합격자 자기소개서를 분석해, 취업준비생에게 어떤 방식으로 자기소개서를 작성하면 좋을지 전략을 제시하는 전문가입니다.
 
-아래의 JD 요약과 자기소개서 요약을 참고하여, 사용자가 다음 질문에 답할 때 어떤 내용과 경험을 쓰는 것이 좋은지 구체적으로 조언해 주세요.
+아래는 해당 직무의 요구사항(직무 설명 요약)과, 실제 합격자 자기소개서에서 추출한 태도와 경험 키워드입니다.
 
-[JD 요약 정보]
+이 자료를 바탕으로, 해당 질문에 대해 **합격자들은 어떤 경험을 바탕으로, 어떤 흐름으로 자소서를 작성했는지 요약하고**, 이를 기반으로 **취업준비생이 어떤 전략으로 접근하면 좋은지** 설명해 주세요.
+
+[직무 설명 요약]
 {jd_summary}
 
-[자기소개서 요약 키워드]
+[합격자 자소서 키워드 요약]
 - 태도: {attitude}
 - 유관경험: {experience}
 
 [자기소개서 문항]
 "{question}"
 
-📌 작성자에게 다음과 같은 형식으로 직접 조언하세요:
-- 어떤 JD 항목을 중심으로 쓰면 좋은지
-- 어떤 경험(예: 프로젝트, 협업, 문제해결)을 중심으로 서술하면 좋은지
-- 문단의 흐름이나 키워드 배열은 어떻게 하면 좋은지
-- "부합한다", "잘 맞는다" 같은 추상적인 표현은 절대 사용하지 마세요
-- 독자가 바로 이해할 수 있도록, 구체적인 문장 예시나 표현 방식을 추천하세요
+📌 아래 내용을 포함해야 합니다:
+- 실제 합격자들이 어떤 경험을 바탕으로 답변했는지 요약
+- 해당 문항에서 자주 활용된 직무 요구사항(역량) 중심으로 설명
+- 어떤 문단 흐름(예: 목표 설정 → 장애물 → 극복 → 성과)이 적절한지 안내
+- 취업준비생이 참고할 수 있는 문장 스타일이나 키워드 예시 포함
 
-말투는 "~하는 것이 좋습니다." 형태의 조언형 서술로, 총 5~7문장 이내로 구성하세요.
+❗주의사항:
+- "잘 맞는다", "부합한다" 같은 평가는 하지 마세요.
+- 말투는 "~하는 방식이 자주 사용됩니다.", "~하는 전략이 효과적입니다."처럼 설명형으로 작성하세요.
+- 총 5~7문장 이내로 간결하게 작성하세요.
 """
-
         try:
             response = llm.chat.completions.create(
                 model="solar-pro",
                 messages=[{"role": "user", "content": prompt}]
             )
-            result[question] = response.choices[0].message.content.strip()
+            item["jd_feedback"] = response.choices[0].message.content.strip()
         except Exception as e:
-            result[question] = f"[오류 발생: {e}]"
+            item["jd_feedback"] = f"[오류 발생: {e}]"
 
-    state["jd_alignment"] = result
     return state

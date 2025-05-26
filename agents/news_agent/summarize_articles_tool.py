@@ -43,7 +43,7 @@ def run(state: dict) -> dict:
 
 
     # ✅ 요약 보장 조건: 기사 수 확인
-    if len(company_articles) < 2 or len(job_articles) < 2:
+    if len(company_articles) < 1 or len(job_articles) < 1:
         state["news_result"] = {
             "agent": "AgentNews",
             "output": None,

@@ -38,7 +38,7 @@ def generate_pdf(state: dict, output_path: str = "output_report.pdf"):
         if isinstance(v, dict) and any(val for val in v.values() if isinstance(val, str) and val.strip())
     }
 
-# ✅ 뉴스 출력 구조 변경
+    # ✅ 뉴스 출력 구조
     news_output = state.get("news_result", {}).get("output", {}) or {}
     기업뉴스 = news_output.get("기업뉴스", [])
     직무뉴스 = news_output.get("직무뉴스", [])
@@ -54,8 +54,8 @@ def generate_pdf(state: dict, output_path: str = "output_report.pdf"):
 
         resume=resume_output,
         profile_comparison=resume_output.get("profile_comparison", []),
-        jd_alignment=resume_output.get("jd_alignment", {}),
-        philosophy_alignment=resume_output.get("philosophy_alignment", {}),
+        jd_structured=resume_output.get("jd_structured", {}),  # ✅ 채용공고 요약
+        resume_questions=resume_output.get("resume_questions", []),  # ✅ 질문별 분석 리스트
 
         interview_summary=interview_result.get("summary", {}),
         interview_qna=interview_qna,

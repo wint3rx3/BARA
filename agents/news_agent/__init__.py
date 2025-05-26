@@ -25,6 +25,4 @@ def run(state: dict) -> dict:
     compiled = graph.compile()
     final_state = compiled.invoke(state)
 
-    return {
-        "news_result": final_state["news_result"]
-    }
+    return final_state
