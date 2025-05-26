@@ -1,72 +1,74 @@
 # agents/news_agent/summarize_articles_tool.py
 
-from typing import List, Dict
-from llm_client.llm import llm
-from difflib import SequenceMatcher
+from llm_client.llm import llm  # ✅ Upstage API 직접 사용
 
-def is_similar(title1: str, title2: str, threshold: float = 0.85) -> bool:
-    return SequenceMatcher(None, title1.lower(), title2.lower()).ratio() >= threshold
-
-def summarize_article(title: str, content: str, link: str) -> str:
-    messages = [
-        {
-            "role": "system",
-            "content": "너는 기사 요약 전문가야. 내용을 100~300자 사이로 요약하고 링크를 포함해줘."
-        },
-        {
-            "role": "user",
-            "content": f"제목: {title}\n\n내용: {content}\n\n링크: {link}"
-        }
-    ]
-
-    try:
-        response = llm.chat.completions.create(
-            model="solar-pro",
-            messages=messages
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        return f"[요약 실패: {e}]"
-
-def run(state: dict) -> dict:
-
-    articles: List[Dict] = state.get("기사리스트", [])
-    seen_titles = []
-    summaries = []
-
+def write_summary_section(articles):
+    summary = []
     for article in articles:
         title = article["제목"]
-        if any(is_similar(title, seen) for seen in seen_titles):
-            continue
-        seen_titles.append(title)
+        article_reference = f"Title: {article['제목']}\nContent: {article['기사']}\nURL: {article['링크']}..."
 
-        summary_text = summarize_article(title, article["기사"], article["링크"])
-        if 100 <= len(summary_text) <= 500:
-            summaries.append({
-                "title": title,
-                "summary": summary_text,
-                "link": article["링크"]
-            })
+        prompt = f"""
+Write a summary section for the article.
 
-    # ✅ 요약 실패했더라도 반드시 news_result 설정
-    if summaries:
+Use the following article as reference and include relevant points from its title and content:
+<article>
+{article_reference}
+<article/>
+
+Summarize the key points and trends related to the article. 
+Keep the tone engaging and informative for the readers. You should write in Korean.
+
+The summary should have at least 3 sentences.
+Do not add the url in the summary.
+"""
+
+        response = llm.chat.completions.create(
+            model="solar-pro",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        summary_text = response.choices[0].message.content.strip()
+        summary.append({title: summary_text})
+
+    return summary
+
+# summarize_articles_tool.py
+
+def run(state: dict) -> dict:
+    company_articles = state.get("기업기사리스트", [])
+    job_articles = state.get("직무기사리스트", [])
+
+    print("📰 [summarize] 기업기사리스트:", len(company_articles))
+    print("📰 [summarize] 직무기사리스트:", len(job_articles))
+
+
+    # ✅ 요약 보장 조건: 기사 수 확인
+    if len(company_articles) < 2 or len(job_articles) < 2:
         state["news_result"] = {
             "agent": "AgentNews",
-            "output": {
-                "articles": summaries
-            },
-            "error": None,
-            "retry": False
+            "output": None,
+            "error": f"기사 수 부족 - 기업({len(company_articles)}/2), 직무({len(job_articles)}/2)",
+            "retry": True
         }
-    else:
-        state["news_result"] = {
-            "agent": "AgentNews",
-            "output": {
-                "articles": []
-            },
-            "error": "요약된 뉴스가 없습니다.",
-            "retry": True  # ✅ 다시 실행될 수 있도록
-        }
-    print("📤 요약 완료, news_result에 저장됨")
+        return state
+
+    company_summary = write_summary_section(company_articles[:2])
+    job_summary = write_summary_section(job_articles[:2])
+
+    unified_summary = []
+    for item in company_summary + job_summary:
+        for title, summary in item.items():
+            unified_summary.append({"title": title, "summary": summary})
+
+    state["news_result"] = {
+    "agent": "AgentNews",
+    "output": {
+        "기업뉴스": company_summary,
+        "직무뉴스": job_summary
+    },
+    "error": None,
+    "retry": False
+}
+
     return state
 

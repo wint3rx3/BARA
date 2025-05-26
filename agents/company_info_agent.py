@@ -31,6 +31,26 @@ def run(state: dict) -> dict:
             "retry": True
         }
         return state
+    
+    business_raw = row.at[0, "사업내용"]
+
+    def split_business_lines(text, chunk_size=3):
+        items = [item.strip() for item in text.split(",")]
+        lines = [", ".join(items[i:i+chunk_size]) for i in range(0, len(items), chunk_size)]
+        return "\n".join(lines)
+
+    formatted_business = split_business_lines(business_raw)
+
+    def format_talent(talent_str):
+        segments = [seg.strip() for seg in talent_str.split("**") if seg.strip()]
+        lines = []
+        for i in range(0, len(segments)-1, 2):  # 카테고리-내용 쌍으로 처리
+            category = segments[i].replace(":", "").strip()
+            description = segments[i+1].lstrip(":").strip()
+            lines.append(f"{i//2 + 1}️⃣ {category}: {description}")
+        return "\n".join(lines)
+
+    formatted_talent = format_talent(row.at[0, "인재상"])
 
     # 🔹 평균연봉 컬럼 처리
     avg_salary_col = f"{job}_평균연봉"
@@ -40,16 +60,12 @@ def run(state: dict) -> dict:
     state["company_info_result"] = {
         "agent": "AgentCompanyInfo",
         "output": {
-            "history": row.at[0, "연혁"],
-            "address": row.at[0, "주소"],
-            "welfare": row.at[0, "복지_통합"],
-            "greeting": row.at[0, "짧은 신년사"] if "짧은 신년사" in row.columns else "정보 없음",
-            "talent": row.at[0, "인재상"],
-            "website": row.at[0, "홈페이지"],
-            "business": row.at[0, "사업내용"],
+            "business": formatted_business,
             "employees": row.at[0, "직원수"],
             "entry_salary": row.at[0, "신입사원 초봉"],
-            "avg_salary": avg_salary
+            "avg_salary": avg_salary,
+            "talent": formatted_talent,
+            "greeting": row.at[0, "짧은 신년사"] if "짧은 신년사" in row.columns else "정보 없음"
         },
         "error": None,
         "retry": False
@@ -58,3 +74,17 @@ def run(state: dict) -> dict:
     return {
     "company_info_result": state["company_info_result"]
 }
+
+if __name__ == "__main__":
+    # 샘플 입력값 구성
+    test_state = {
+        "user_input": {
+            "기업명": "삼성전자",       # company_info.csv 내 포함된 기업
+            "직무명": "생산/제조"       # 평균연봉 컬럼 존재하는 직무명
+        }
+    }
+
+    result = run(test_state)
+    print("📦 반환 결과:")
+    from pprint import pprint
+    pprint(result["company_info_result"]["output"])

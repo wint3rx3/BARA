@@ -5,12 +5,8 @@ import os
 TEMPLATE_DIR = os.path.dirname(__file__)
 
 KOR_LABELS = {
-    "history": "연혁",
-    "address": "주소",
-    "welfare": "복지",
     "greeting": "신년사",
     "talent": "인재상",
-    "website": "채용사이트",
     "business": "사업내용",
     "employees": "직원수",
     "entry_salary": "신입사원 초봉",
@@ -42,12 +38,19 @@ def generate_pdf(state: dict, output_path: str = "output_report.pdf"):
         if isinstance(v, dict) and any(val for val in v.values() if isinstance(val, str) and val.strip())
     }
 
+# ✅ 뉴스 출력 구조 변경
+    news_output = state.get("news_result", {}).get("output", {}) or {}
+    기업뉴스 = news_output.get("기업뉴스", [])
+    직무뉴스 = news_output.get("직무뉴스", [])
+
     html = template.render(
         기업명=state["user_input"].get("기업명", ""),
         직무명=state["user_input"].get("직무명", ""),
 
         finance=state.get("finance_result", {}).get("output", {}),
-        news_list=state.get("news_result", {}).get("output", {}).get("articles", []),
+
+        기업뉴스=기업뉴스,
+        직무뉴스=직무뉴스,
 
         resume=resume_output,
         profile_comparison=resume_output.get("profile_comparison", []),
@@ -56,7 +59,7 @@ def generate_pdf(state: dict, output_path: str = "output_report.pdf"):
 
         interview_summary=interview_result.get("summary", {}),
         interview_qna=interview_qna,
-        interview_hard=interview_hard,  # ✅ 비어있지 않은 항목만 포함
+        interview_hard=interview_hard,
 
         company_info=state.get("company_info_result", {}).get("output", {}),
         company_info_labels=KOR_LABELS

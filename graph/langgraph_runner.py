@@ -13,6 +13,22 @@ def run_news_agent(state):
     state.update(updated)
     return state
 
+def run_news_agent_with_retry(state):
+    retry_count = 0
+    while True:
+        state = run_news_agent(state)
+        coord = coord_stage_1.run(state)
+        state.update(coord)
+
+        retry = coord.get("coord_stage_1_result", {}).get("retry", False)
+        if not retry:
+            break
+
+        retry_count += 1
+        print(f"🔁 AgentNews 재시도: {retry_count}회")
+
+    return state
+
 def run_company_info_agent(state):
     updated = company_info_agent.run(state)
     print("🧪 run_company_info_agent 반환 키:", list(updated.keys()))
@@ -56,7 +72,7 @@ def run_langgraph(user_input: dict, interview_data=None, interview_reviews=None)
     builder.set_entry_point("start")
 
     # 순차 실행 노드 추가
-    builder.add_node("agent_news", run_news_agent)
+    builder.add_node("agent_news", run_news_agent_with_retry)
     builder.add_edge("start", "agent_news")
 
     builder.add_node("agent_company_info", run_company_info_agent)

@@ -3,16 +3,12 @@ from pandas import DataFrame
 
 # 🔹 1. CompanyInfo
 class CompanyInfoOutput(TypedDict):
-    history: str
-    address: str
-    welfare: str
-    greeting: str
-    talent: str
-    website: str
     business: str
     employees: str
     entry_salary: str
     avg_salary: str
+    talent: str
+    greeting: str
 
 class CompanyInfoResult(TypedDict):
     agent: Literal["AgentCompanyInfo"]
@@ -26,7 +22,10 @@ class NewsSummary(TypedDict):
     summary: str
 
 class NewsOutput(TypedDict):
-    articles: List[NewsSummary]
+    기업: str
+    직무: str
+    기업뉴스: List[NewsSummary]
+    직무뉴스: List[NewsSummary]
 
 class NewsResult(TypedDict):
     agent: Literal["AgentNews"]

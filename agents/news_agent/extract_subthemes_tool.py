@@ -1,78 +1,96 @@
 # agents/news_agent/extract_subthemes_tool.py
 
-from openai import OpenAI
-import os
-from dotenv import load_dotenv
+from typing import List
+from pydantic import BaseModel, Field, TypeAdapter
+from llm_client.llm import llm  # ✅ Upstage API 직접 사용
 
-load_dotenv()
+class NewsletterThemeOutput(BaseModel):
+    theme: str = Field(description="The main newsletter theme")
+    sub_themes: List[str] = Field(description="Sub themes")
 
-llm = OpenAI(
-    api_key=os.getenv("UPSTAGE_API_KEY"),
-    base_url="https://api.upstage.ai/v1"
-)
+json_schema = {
+    "name": "newsletter_theme_output",
+    "schema": {  # ✅ 'schema' 키 아래에 구조를 중첩해야 함
+        "type": "object",
+        "properties": {
+            "theme": {
+                "type": "string",
+                "description": "The main newsletter theme"
+            },
+            "sub_themes": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Sub themes"
+            }
+        },
+        "required": ["theme", "sub_themes"],
+        "strict": True,
+        "additionalProperties": False
+    }
+}
+
+def build_prompt(company: str, job: str, recent_titles: List[str], penalty_note: str) -> str:
+    return f"""
+You are an expert assisting with news summarization for job seekers. Based on the list of recent news article titles provided below, your task is to extract one specific, overarching theme framed as a single keyword.
+
+Then, generate 2 *realistic and specific* sub-keywords under that theme. These sub-keywords must:
+- Be at most 3 words long
+- Be usable as Naver News search keywords
+- Reflect actual trends, events, or public issues
+- Be likely to appear in real-world news article titles
+
+⚠️ Do not generate abstract academic or biomedical phrases unless they appear in the titles.
+⚠️ Avoid keywords that are too technical, niche, or unrelated to business/employment topics.
+⚠️ Strongly avoid political topics, politicians, elections, or anything related to government policy or political discourse.
+⚠️ Ensure one keyword includes the company name "{company}" and one includes the job name "{job}", naturally in Korean.
+
+{penalty_note}
+
+All output must be written in Korean.
+
+뉴스 제목 리스트:
+{chr(10).join(recent_titles)}
+"""
+
+
 
 def run(state: dict) -> dict:
-    titles = state.get("뉴스제목", [])
-    recent_news = "\n".join(titles)
+    company = state["user_input"]["기업명"]
+    job = state["user_input"]["직무명"]
+    company_titles = state["기업뉴스제목"]
+    job_titles = state["직무뉴스제목"]
 
-    messages = [
-        {
-            "role": "system",
-            "content": "너는 뉴스 분석 전문가야. 제목들을 보고 주제와 서브주제를 JSON으로 뽑아줘."
-        },
-        {
-            "role": "user",
-            "content": f"""
-다음 뉴스 제목들을 참고하여 JSON 형식으로 아래 구조를 엄격히 따르세요.
+    # 🔍 누적 피드백 반영
+    feedback_history = state.get("news_feedback_history", [])
+    all_irrelevant = set()
+    all_duplicates = set()
+    for fb in feedback_history:
+        all_irrelevant.update(fb.get("irrelevant_titles", []))
+        all_duplicates.update(tuple(pair) for pair in fb.get("duplicate_pairs", []))
 
-뉴스 제목 목록:
-{recent_news}
+    penalty_lines = []
+    if all_irrelevant:
+        penalty_lines.append("다음 뉴스 제목들은 관련이 없다고 판단되었습니다. 유사 주제를 피해주세요:")
+        penalty_lines.extend(f"- {t}" for t in sorted(all_irrelevant))
+    if all_duplicates:
+        penalty_lines.append("\n다음 뉴스 쌍은 중복된 내용으로 판단되었습니다. 유사한 주제를 피해주세요:")
+        penalty_lines.extend(f"- \"{t1}\" / \"{t2}\"" for t1, t2 in sorted(all_duplicates))
+    penalty_note = "\n".join(penalty_lines)
 
-형식 예시:
-{{
-  "theme": "반도체 산업 경쟁 심화",
-  "sub_themes": ["삼성의 HBM 투자", "TSMC와의 기술 경쟁"]
-}}
-"""
-        }
-    ]
+    # ✅ 프롬프트 실행
+    company_prompt = build_prompt(company, job, company_titles, penalty_note)
+    job_prompt = build_prompt(company, job, job_titles, penalty_note)
 
-    response_format = {
-        "type": "json_schema",
-        "json_schema": {
-            "name": "NewsletterTheme",
-            "strict": True,
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "theme": {"type": "string"},
-                    "sub_themes": {
-                        "type": "array",
-                        "items": {"type": "string"}
-                    }
-                },
-                "required": ["theme", "sub_themes"],
-                "additionalProperties": False
-            }
-        }
-    }
+    company_output = run_llm_for_subthemes(company_prompt)
+    job_output = run_llm_for_subthemes(job_prompt)
 
-    try:
-        response = llm.chat.completions.create(
-            model="solar-pro",
-            messages=messages,
-            response_format=response_format
-        )
-        content = response.choices[0].message.content
-        sub_themes = eval(content)["sub_themes"]  # or json.loads
-    except Exception as e:
-        state["news_result"] = {
-            "agent": "AgentNews",
-            "output": None,
-            "error": f"subtheme 추출 실패: {str(e)}",
-            "retry": True
-        }
-        return state
+    # ✅ 콘솔 출력 추가
+    print("🧵 생성된 기업 서브테마:", company_output.sub_themes)
+    print("🧵 생성된 직무 서브테마:", job_output.sub_themes)
 
-    state["서브테마"] = sub_themes
+    # ✅ 결과 저장
+    state["기업서브테마"] = company_output.sub_themes
+    state["직무서브테마"] = job_output.sub_themes
     return state

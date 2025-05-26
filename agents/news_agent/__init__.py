@@ -8,7 +8,6 @@ from agents.news_agent import (
     summarize_articles_tool
 )
 
-# ✅ 수정된 news_agent run 함수
 def run(state: dict) -> dict:
     graph = StateGraph(dict)
 
@@ -26,7 +25,6 @@ def run(state: dict) -> dict:
     compiled = graph.compile()
     final_state = compiled.invoke(state)
 
-    # ✅ 핵심: 필요한 key만 추출하여 반환
     return {
-        "news_result": final_state.get("news_result")
+        "news_result": final_state["news_result"]
     }

@@ -17,7 +17,7 @@ def search_recent_news(keyword):
     return [clean_html(i["title"]) for i in items]
 
 def search_news_for_subtheme(keyword):
-    url = f"https://openapi.naver.com/v1/search/news.json?query={urllib.parse.quote(keyword)}&display=1"
+    url = f"https://openapi.naver.com/v1/search/news.json?query={urllib.parse.quote(keyword)}&display=5"
     req = urllib.request.Request(url)
     req.add_header("X-Naver-Client-Id", client_id)
     req.add_header("X-Naver-Client-Secret", client_secret)

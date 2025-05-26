@@ -64,22 +64,16 @@
   <h1>{{ 기업명 }} - {{ 직무명 }} 분석 보고서</h1>
 
   <div class="section">
-    <h2>🏢 기업 일반 정보</h2>
-      <ul>
-        <li><strong>연혁:</strong>
-          <ul>
-            {% for line in company_info["history"].split('\n')[:10] %}
-              <li>{{ line.strip() }}</li>
-            {% endfor %}
-          </ul>
-        </li>
-        <li><strong>본사 주소:</strong> {{ company_info["address"] }}</li>
-        <li><strong>복지 제도:</strong><br>{{ company_info["welfare"] | replace('\n', '<br>') | safe }}</li>
-        <li><strong>인재상:</strong><br>{{ company_info["talent"] | replace('**', '') | replace('\n', '<br>') | safe }}</li>
-        <li><strong>신년사 요약:</strong><br>{{ company_info["greeting"] | replace('\n', '<br>') | safe }}</li>
-        <li><strong>채용 사이트:</strong> <a href="{{ company_info["website"] }}">{{ company_info["website"] }}</a></li>
-      </ul>
-  </div>
+  <h2>🏢 기업 일반 정보</h2>
+  <ul>
+    <li><strong>사업내용:</strong><br>{{ company_info["business"] | replace('\n', '<br>') | safe }}</li>
+    <li><strong>직원 수:</strong> {{ company_info["employees"] }}</li>
+    <li><strong>신입사원 초봉:</strong> {{ company_info["entry_salary"] }}</li>
+    <li><strong>직무 평균연봉:</strong> {{ company_info["avg_salary"] }}</li>
+    <li><strong>인재상:</strong><br>{{ company_info["talent"] | replace('\n', '<br>') | safe }}</li>
+    <li><strong>신년사 요약:</strong><br>{{ company_info["greeting"] | replace('\n', '<br>') | safe }}</li>
+  </ul>
+</div>
 
   <div class="section">
     <h2>📊 재무 요약</h2>
@@ -87,15 +81,28 @@
     <img src="{{ finance.combined_chart_path | safe }}" alt="주가 및 매출 차트" style="width: 100%; max-width: 800px; margin: 1rem 0;">
   </div>
 
-
   <div class="section">
     <h2>📰 최신 뉴스 요약</h2>
+
+    <h3>🏢 기업 관련 뉴스</h3>
     <ul>
-      {% for news in news_list %}
-        <li>{{ news.title }}</span><br>{{ news.summary }}</li>
+      {% for news in 기업뉴스 %}
+        {% for title, summary in news.items() %}
+          <li><strong>{{ title }}</strong><br>{{ summary }}</li>
+        {% endfor %}
+      {% endfor %}
+    </ul>
+
+    <h3>💼 직무 관련 뉴스</h3>
+    <ul>
+      {% for news in 직무뉴스 %}
+        {% for title, summary in news.items() %}
+          <li><strong>{{ title }}</strong><br>{{ summary }}</li>
+        {% endfor %}
       {% endfor %}
     </ul>
   </div>
+
 
   <div class="section">
     <h2>🧾 스펙 비교</h2>
