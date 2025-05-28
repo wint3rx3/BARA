@@ -90,47 +90,51 @@ def run(state: dict) -> dict:
     corp_articles = state.get("기업기사리스트", [])
     job_articles = state.get("직무기사리스트", [])
 
-    retry_count = state.get("retry_count", 0)  # ✅ retry 횟수 상태값
+    valid_corp, irr_corp, dup_corp = filter_and_dedup(corp_articles, company, job, "기업")
+    valid_job, irr_job, dup_job = filter_and_dedup(job_articles, company, job, "직무")
 
-    if retry_count >= 3:
-        # ✅ 3턴 초과 → 그냥 최대 2개씩 추출해서 넘기기
-        print("⛔ 최대 재시도 도달 → 관련성/중복 판단 생략하고 무조건 기사 통과")
-        valid_corp = corp_articles[:2]
-        valid_job = job_articles[:2]
-        state["news_cache"] = {"기업": valid_corp, "직무": valid_job}
-        retry, error_agents = False, []
-    else:
-        # ✅ 기존 방식 유지
-        valid_corp, irr_corp, dup_corp = filter_and_dedup(corp_articles, company, job, "기업")
-        valid_job, irr_job, dup_job = filter_and_dedup(job_articles, company, job, "직무")
+    state["news_cache"] = {"기업": valid_corp, "직무": valid_job}
 
-        state["news_cache"] = {"기업": valid_corp, "직무": valid_job}
+    retry, error_agents = False, []
+    if len(valid_corp) < 2 or len(valid_job) < 2:
+        retry = True
+        reasons = []
+        if len(valid_corp) < 2:
+            reasons.append(f"기업 기사 부족 ({len(valid_corp)}/2)")
+        if len(valid_job) < 2:
+            reasons.append(f"직무 기사 부족 ({len(valid_job)}/2)")
+        state["news_result"]["error"] = "유효 뉴스 부족 - " + ", ".join(reasons)
+        state["news_result"]["retry"] = True
+        error_agents.append(("AgentNews", state["news_result"]["error"]))
+        state.setdefault("news_feedback_history", []).append({
+            "irrelevant_titles": irr_corp + irr_job,
+            "duplicate_titles": dup_corp + dup_job,
+            "reason": "관련성 부족 또는 중복 뉴스로 인해 유효 뉴스 부족"
+        })
 
-        retry, error_agents = False, []
-        if len(valid_corp) < 2 or len(valid_job) < 2:
-            retry = True
-            reasons = []
-            if len(valid_corp) < 2:
-                reasons.append(f"기업 기사 부족 ({len(valid_corp)}/2)")
-            if len(valid_job) < 2:
-                reasons.append(f"직무 기사 부족 ({len(valid_job)}/2)")
-            state["news_result"]["error"] = "유효 뉴스 부족 - " + ", ".join(reasons)
-            state["news_result"]["retry"] = True
-            error_agents.append(("AgentNews", state["news_result"]["error"]))
-            state.setdefault("news_feedback_history", []).append({
-                "irrelevant_titles": irr_corp + irr_job,
-                "duplicate_titles": dup_corp + dup_job,
-                "reason": "관련성 부족 또는 중복 뉴스로 인해 유효 뉴스 부족"
-            })
+    print("✅ [coord] 유효 기업 기사 수:", len(valid_corp))
+    for a in valid_corp:
+        print("   -", a["제목"])
+    print("✅ [coord] 유효 직무 기사 수:", len(valid_job))
+    for a in valid_job:
+        print("   -", a["제목"])
 
-    # 출력 및 마무리
-    print("✅ [coord] 유효 기업 기사 수:", len(state["news_cache"]["기업"]))
-    print("✅ [coord] 유효 직무 기사 수:", len(state["news_cache"]["직무"]))
+    for agent, key, required_fields in [
+        ("AgentFinance", "finance_result", ["revenue_chart_path", "stock_chart_path"]),
+        ("AgentCompanyInfo", "company_info_result", ["address", "history"])
+    ]:
+        result = state.get(key)
+        if not result or result.get("error") or result.get("retry"):
+            error_agents.append((agent, "실행 실패 또는 오류"))
+        else:
+            output = result.get("output", {})
+            if not all(output.get(k) for k in required_fields):
+                error_agents.append((agent, "필수 필드 누락"))
 
     state["coord_stage_1_result"] = {
         "agent": "CoordStage1",
         "output": {
-            "status": "오류" if retry else "정상",
+            "status": "오류" if error_agents else "정상",
             "문제_에이전트": error_agents
         },
         "retry": retry,

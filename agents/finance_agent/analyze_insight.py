@@ -39,20 +39,11 @@ def run(state: dict) -> dict:
     기업뉴스 = news_output.get("기업뉴스", [])
     직무뉴스 = news_output.get("직무뉴스", [])
     news = 기업뉴스 + 직무뉴스
-
-    print(f"📰 기업뉴스 개수: {len(기업뉴스)}")
-    print(f"📰 직무뉴스 개수: {len(직무뉴스)}")
-
     stock_summary = summarize_dataframe(stock_df.tail(5), "주가")
     revenue_summary = summarize_dataframe(revenue_df, "매출")
     news_summary = format_news(news)
 
     # ✅ 프롬프트 확인 로그
-    print("📨 LLM 프롬프트 생성 시작")
-    print("[주가 요약]:\n", stock_summary)
-    print("[매출 요약]:\n", revenue_summary)
-    print("[뉴스 요약]:\n", news_summary)
-
     messages = [
         {
             "role": "system",
@@ -114,8 +105,6 @@ def run(state: dict) -> dict:
             response_format=response_format
         )
         raw_result = response.choices[0].message.content
-        print("📬 LLM 응답 원문:\n", raw_result)
-
         parsed_result = json.loads(raw_result)
         insight_text = parsed_result["insight"]
 

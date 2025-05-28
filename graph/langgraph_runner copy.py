@@ -15,17 +15,13 @@ def run_news_agent(state):
 
 def run_news_agent_with_retry(state):
     retry_count = 0
-    max_retry = 3  # 최대 3번 재시도 = 총 4턴
-
     while True:
-        state["retry_count"] = retry_count  # ✅ 현재 턴 숫자를 coord_stage_1에게 전달
-
-        state = run_news_agent(state)       # search → extract → fetch → summarize
-        coord = coord_stage_1.run(state)    # 유효성 + 중복 판단
+        state = run_news_agent(state)
+        coord = coord_stage_1.run(state)
         state.update(coord)
 
         retry = coord.get("coord_stage_1_result", {}).get("retry", False)
-        if not retry or retry_count >= max_retry:
+        if not retry:
             break
 
         retry_count += 1

@@ -107,6 +107,5 @@ def run(state: dict) -> dict:
         "error": None,
         "retry": False
     }
-
-    print('get_code.py 실행완료')
+    
     return state

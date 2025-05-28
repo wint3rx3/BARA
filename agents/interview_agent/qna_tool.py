@@ -8,6 +8,17 @@ def generate_qna(state: dict) -> dict:
     company = state["user_input"]["기업명"]
     job = state["user_input"]["직무명"]
 
+    # 🔍 뉴스 및 재무 인사이트 수집
+    news_output = state.get("news_result", {}).get("output", {})
+    finance_insight = state.get("finance_result", {}).get("output", {}).get("insight", "")
+
+    기업뉴스 = "\n".join([
+        f"- {list(n.keys())[0]}: {list(n.values())[0]}" for n in news_output.get("기업뉴스", [])
+    ])
+    직무뉴스 = "\n".join([
+        f"- {list(n.keys())[0]}: {list(n.values())[0]}" for n in news_output.get("직무뉴스", [])
+    ])
+
     if df is None or df.empty:
         print("⚠️ interview_data가 없음 → QnA 생성 생략")
         state.setdefault("interview_result", {"agent": "AgentInterview", "output": {}, "error": None, "retry": False})
@@ -65,7 +76,9 @@ def generate_qna(state: dict) -> dict:
                     company=company,
                     job=job,
                     category_name=label_map[key],
-                    examples=examples
+                    examples=examples,
+                    news_insight=기업뉴스 + "\n\n" + 직무뉴스,
+                    finance_insight=finance_insight
                 )
             }
         ]

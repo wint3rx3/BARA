@@ -35,9 +35,12 @@ def run(state: dict) -> dict:
     business_raw = row.at[0, "사업내용"]
 
     def split_business_lines(text, chunk_size=3):
+        if not isinstance(text, str) or pd.isna(text):
+            return "정보 없음"
         items = [item.strip() for item in text.split(",")]
         lines = [", ".join(items[i:i+chunk_size]) for i in range(0, len(items), chunk_size)]
         return "\n".join(lines)
+
 
     formatted_business = split_business_lines(business_raw)
 
@@ -55,13 +58,15 @@ def run(state: dict) -> dict:
     # 🔹 평균연봉 컬럼 처리
     avg_salary_col = f"{job}_평균연봉"
     avg_salary = row.at[0, avg_salary_col] if avg_salary_col in row.columns else "정보 없음"
+    raw_employees = str(row.at[0, "직원수"]).replace(",", "").replace("명", "").strip()
+    formatted_employees = f"{int(raw_employees):,}명"
 
     # 🔹 최종 결과 구성
     state["company_info_result"] = {
         "agent": "AgentCompanyInfo",
         "output": {
             "business": formatted_business,
-            "employees": row.at[0, "직원수"],
+            "employees": formatted_employees,
             "entry_salary": row.at[0, "신입사원 초봉"],
             "avg_salary": avg_salary,
             "talent": formatted_talent,
@@ -87,4 +92,4 @@ if __name__ == "__main__":
     result = run(test_state)
     print("📦 반환 결과:")
     from pprint import pprint
-    pprint(result["company_info_result"]["output"])
+    print(result["company_info_result"]["output"])

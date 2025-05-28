@@ -1,131 +1,106 @@
-# agents/finance_agent/chart_generator.py
-
-import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from matplotlib.ticker import FuncFormatter, MaxNLocator
+from PIL import Image
 from pathlib import Path
-from openai import OpenAI
-from dotenv import load_dotenv
-import re
 
-load_dotenv()
-
-DATA_DIR = Path.cwd() / "data"
-CHART_DIR = Path.cwd() / "charts"
+# 디렉토리 설정
+DATA_DIR = Path("data")
+CHART_DIR = Path("charts")
 CHART_DIR.mkdir(parents=True, exist_ok=True)
 
-client = OpenAI(
-    api_key=os.getenv("UPSTAGE_API_KEY"),
-    base_url="https://api.upstage.ai/v1"
-)
+
+def chart_stock_generator():
+    data_path = DATA_DIR / "stock_data.csv"
+    output_path = CHART_DIR / "stock_chart1.png"
+
+    df = pd.read_csv(data_path)
+    df = df.dropna(subset=["Date"])
+    df["Date"] = pd.to_datetime(df["Date"])
+    df["Close"] = pd.to_numeric(df["Close"], errors="coerce")
+    df = df.dropna(subset=["Close"])
+    df = df.sort_values("Date")
+
+    plt.figure(figsize=(10, 6), facecolor="white")
+    plt.plot(df["Date"], df["Close"], color="blue", linewidth=2)
+    plt.grid(True, linestyle="--", color="lightgray")
+    plt.title("Stock Price Trend", fontsize=14)
+    plt.xlabel("Date", fontsize=12)
+    plt.ylabel("Close Price", fontsize=12)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+    print("✅ stock_chart1.png 생성 완료")
+
+
+def chart_revenue_generator():
+    plt.rcParams['font.family'] = 'Malgun Gothic'
+    plt.rcParams['axes.unicode_minus'] = False
+
+    df = pd.read_csv(DATA_DIR / "revenue_data.csv")
+    priority_cols = ["매출액", "영업이익", "당기순이익", "자산총계"]
+    valid_col = next((col for col in priority_cols if col in df.columns and df[col].notna().all()), None)
+
+    if valid_col is None:
+        raise ValueError("모든 지표 컬럼에 결측치가 존재하거나 없음")
+
+    df["연도"] = pd.to_numeric(df["연도"], errors="coerce")
+    df = df.dropna(subset=["연도", valid_col]).sort_values("연도")
+
+    # ✅ 쉼표 제거 + float 변환 + 조 단위 환산
+    df[valid_col] = df[valid_col].str.replace(",", "").astype(float) / 1e12
+
+    plt.figure(figsize=(10, 6), facecolor="white")
+    plt.plot(df["연도"], df[valid_col], marker="o", color="green", linewidth=2)
+    plt.grid(True, linestyle="--", color="lightgray")
+    plt.title("Annual Revenue (in Trillion)", fontsize=14)
+    plt.xlabel("Year", fontsize=12)
+    plt.ylabel("Revenue (₩ Trillion)", fontsize=12)
+    plt.xticks(df["연도"])
+    plt.tight_layout()
+    plt.savefig(CHART_DIR / "revenue_chart1.png")
+    plt.close()
+    print(f"✅ revenue_chart.png1 생성 완료 → 기준 컬럼: {valid_col}")
+
+
+def concat_images(stock_path, revenue_path, combined_path):
+    img1 = Image.open(stock_path)
+    img2 = Image.open(revenue_path)
+
+    width = img1.width + img2.width
+    height = max(img1.height, img2.height)
+
+    dst = Image.new("RGB", (width, height), "white")  # ✅ 크기 튜플 올바르게 수정
+    dst.paste(img1, (0, 0))
+    dst.paste(img2, (img1.width, 0))
+
+    dst.save(combined_path)
+    print("✅ 차트 병합 완료:", combined_path)
+
+
 
 def to_windows_uri(path: Path) -> str:
     return path.resolve().as_uri()
 
-def fallback_chart(stock_df, revenue_df, chart_path: Path):
-    print("🛠 fallback 차트 생성 시작")
-
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-
-    try:
-        stock_df["Date"] = pd.to_datetime(stock_df["Date"], errors="coerce")
-        stock_df = stock_df.dropna(subset=["Date"])
-        axes[0].plot(stock_df["Date"], stock_df["Close"], marker="o", linewidth=2)
-        axes[0].set_title("📈 Stock Price Over Time")
-        axes[0].set_xlabel("Date")
-        axes[0].set_ylabel("Close")
-        axes[0].xaxis.set_major_locator(mdates.AutoDateLocator())
-        axes[0].tick_params(axis="x", rotation=45)
-        axes[0].yaxis.set_major_locator(MaxNLocator(nbins=6))
-    except Exception as e:
-        print("⚠️ 주가 차트 오류:", str(e))
-
-    try:
-        revenue_df["매출액"] = revenue_df["매출액"].astype(str).str.replace(",", "")
-        revenue_df = revenue_df[revenue_df["매출액"].str.isnumeric()]
-        revenue_df["매출액"] = revenue_df["매출액"].astype(float)
-        axes[1].plot(revenue_df["연도"], revenue_df["매출액"], marker="o", linewidth=2)
-        axes[1].set_title("💰 Annual Revenue")
-        axes[1].set_xlabel("Year")
-        axes[1].set_ylabel("Revenue (KRW)")
-        axes[1].tick_params(axis="x", rotation=45)
-        axes[1].yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{int(x / 1e8)}억'))
-        axes[1].yaxis.set_major_locator(MaxNLocator(nbins=6))
-    except Exception as e:
-        print("⚠️ 매출 차트 오류:", str(e))
-
-    plt.tight_layout(pad=3.0)
-    plt.savefig(chart_path, dpi=150)
-    plt.close()
-    print("✅ fallback 차트 저장 완료")
 
 def run(state: dict) -> dict:
-    stock_df = pd.read_csv(DATA_DIR / "stock_data.csv")
-    revenue_df = pd.read_csv(DATA_DIR / "revenue_data.csv")
-    chart_path = CHART_DIR / "finance_combined_chart.png"
+    chart_stock_generator()
+    chart_revenue_generator()
 
-    messages = [
-        {
-            "role": "system",
-            "content": "You are an expert Python data visualization assistant using matplotlib."
+    stock_path = CHART_DIR / "stock_chart1.png"
+    revenue_path = CHART_DIR / "revenue_chart1.png"
+    combined_path = CHART_DIR / "finance_combined_chart1.png"
+
+    concat_images(stock_path, revenue_path, combined_path)
+
+    state["finance_result"] = {
+        "agent": "AgentFinance",
+        "output": {
+            "combined_chart_path": to_windows_uri(combined_path),  # ✅ 이것만 남김
+            "insight": "차트 기반 재무 인사이트는 추후 생성됩니다."
         },
-        {
-            "role": "user",
-            "content": """
-You are given two DataFrames already loaded:
-- stock_df: includes daily stock prices. Use 'Date' (datetime) as x-axis and 'Close' as y-axis.
-- revenue_df: includes annual revenue data. Use '연도' (int) as x-axis and '매출액' (float) as y-axis.
-
-Write complete matplotlib code to:
-1. Create a 1-row 2-column subplot
-2. Left: stock_df['Date'] vs stock_df['Close']
-3. Right: revenue_df['연도'] vs revenue_df['매출액']
-4. Save to './charts/finance_combined_chart.png' with dpi=150
-5. Use English labels/titles and proper layout
-"""
-        }
-    ]
-
-    try:
-        response = client.chat.completions.create(
-            model="solar-pro",
-            messages=messages,
-        )
-        code = response.choices[0].message.content.strip()
-        print("🧠 생성된 LLM 코드:\n", code)
-
-        # ✅ 마크다운 블록 제거 (```python ... ```)
-        if code.startswith("```"):
-            code = re.sub(r"^```(?:python)?", "", code.strip(), flags=re.IGNORECASE | re.MULTILINE)
-            code = code.replace("```", "").strip()
-
-        if "savefig" not in code or "finance_combined_chart" not in code:
-            print("⚠️ 경고: 저장 코드 누락 가능성 있음!")
-
-        local_vars = {
-            "stock_df": stock_df,
-            "revenue_df": revenue_df,
-            "plt": plt,
-            "Path": Path,
-            "CHART_DIR": CHART_DIR
-        }
-        exec(code, {}, local_vars)
-
-    except Exception as e:
-        print("🚨 LLM 코드 실행 오류:", str(e))
-
-    # ✅ 파일 존재 여부 확인 + fallback
-    if not chart_path.exists():
-        print("❌ LLM 차트 생성 실패 → fallback 사용")
-        fallback_chart(stock_df, revenue_df, chart_path)
-
-    # ✅ 상태 저장
-    if "finance_result" not in state or not isinstance(state["finance_result"], dict):
-        state["finance_result"] = {"agent": "AgentFinance", "output": {}, "error": None, "retry": False}
-    elif "output" not in state["finance_result"] or state["finance_result"]["output"] is None:
-        state["finance_result"]["output"] = {}
-
-    state["finance_result"]["output"]["combined_chart_path"] = to_windows_uri(chart_path)
+        "error": None,
+        "retry": False
+    }
     return state
+

@@ -26,6 +26,10 @@
       color: #1565c0;
       margin-top: 1.5rem;
     }
+    ul {
+      list-style-type: disc;
+      padding-left: 1.5rem;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -39,9 +43,11 @@
     th {
       background-color: #f5f5f5;
     }
-    ul {
-      list-style-type: disc;
-      padding-left: 1.5rem;
+    blockquote {
+      background: #f9f9f9;
+      border-left: 5px solid #ccc;
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
     }
     .highlight {
       background-color: #fff9c4;
@@ -50,139 +56,170 @@
     }
     .tip {
       background-color: #e3f2fd;
-      padding: 0.5rem;
+      padding: 0.7rem 1rem;
       border-left: 4px solid #64b5f6;
-      margin-top: 0.5rem;
+      margin: 1rem 0;
     }
     .section {
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
     }
   </style>
 </head>
 <body>
 
-  <h1>{{ 기업명 }} - {{ 직무명 }} 분석 보고서</h1>
+<h1>{{ 기업명 }} - {{ 직무명 }} 분석 보고서</h1>
 
-  <div class="section">
+<!-- 1. 기업 기본 정보 -->
+<div class="section">
   <h2>🏢 기업 일반 정보</h2>
   <ul>
-    <li><strong>사업내용:</strong><br>{{ company_info["business"] | replace('\n', '<br>') | safe }}</li>
-    <li><strong>직원 수:</strong> {{ company_info["employees"] }}</li>
-    <li><strong>신입사원 초봉:</strong> {{ company_info["entry_salary"] }}</li>
-    <li><strong>직무 평균연봉:</strong> {{ company_info["avg_salary"] }}</li>
-    <li><strong>인재상:</strong><br>{{ company_info["talent"] | replace('\n', '<br>') | safe }}</li>
-    <li><strong>신년사 요약:</strong><br>{{ company_info["greeting"] | replace('\n', '<br>') | safe }}</li>
+    <li><strong>사업내용:</strong><br>{{ company_info.business | replace('\n', '<br>') | safe }}</li>
+    <li><strong>직원 수:</strong> {{ company_info.employees }}</li>
+    <li><strong>신입사원 초봉:</strong> {{ company_info.entry_salary }}</li>
+    <li><strong>직무 평균연봉:</strong> {{ company_info.avg_salary }}</li>
+  </ul>
+  <blockquote>
+    <p><strong>인재상</strong><br>{{ company_info.talent | replace('\n', '<br>') | safe }}</p>
+  </blockquote>
+
+  <blockquote>
+    <p><strong>신년사 요약</strong><br>{{ company_info.greeting | replace('\n', '<br>') | safe }}</p>
+  </blockquote>
+</div>
+
+<!-- 5. 재무 요약 -->
+<div class="section">
+  <h2>📊 재무 요약 및 인사이트</h2>
+  {% if finance.combined_chart_path %}
+    <img src="{{ finance.combined_chart_path }}" alt="Finance Chart" style="width:100%; max-width:800px; border:1px solid #ccc; margin-bottom:1rem;">
+  {% endif %}
+  {% if finance.insight %}
+    <p><strong>💡 요약 인사이트:</strong><br>{{ finance.insight }}</p>
+  {% endif %}
+</div>
+
+<!-- 6. 뉴스 요약 -->
+<div class="section">
+  <h2>📰 최신 뉴스 요약</h2>
+  <h3>🏢 기업 관련 뉴스</h3>
+  <ul>
+    {% for news in 기업뉴스 %}
+      {% for title, summary in news.items() %}
+        <li><strong>{{ title }}</strong><br>{{ summary }}</li>
+      {% endfor %}
+    {% endfor %}
+  </ul>
+
+  <h3>💼 직무 관련 뉴스</h3>
+  <ul>
+    {% for news in 직무뉴스 %}
+      {% for title, summary in news.items() %}
+        <li><strong>{{ title }}</strong><br>{{ summary }}</li>
+      {% endfor %}
+    {% endfor %}
   </ul>
 </div>
 
-  <div class="section">
-    <h2>📊 재무 요약</h2>
-    <p><strong>요약 인사이트:</strong> {{ finance.insight }}</p>
-    <img src="{{ finance.combined_chart_path | safe }}" alt="주가 및 매출 차트" style="width: 100%; max-width: 800px; margin: 1rem 0;">
-  </div>
-
-  <div class="section">
-    <h2>📰 최신 뉴스 요약</h2>
-
-    <h3>🏢 기업 관련 뉴스</h3>
-    <ul>
-      {% for news in 기업뉴스 %}
-        {% for title, summary in news.items() %}
-          <li><strong>{{ title }}</strong><br>{{ summary }}</li>
-        {% endfor %}
-      {% endfor %}
-    </ul>
-
-    <h3>💼 직무 관련 뉴스</h3>
-    <ul>
-      {% for news in 직무뉴스 %}
-        {% for title, summary in news.items() %}
-          <li><strong>{{ title }}</strong><br>{{ summary }}</li>
-        {% endfor %}
-      {% endfor %}
-    </ul>
-  </div>
-
-
-  <div class="section">
-    <h2>🧾 스펙 비교</h2>
-    <table>
-      <tr>
-        <th>구분</th><th>학점</th><th>어학</th><th>자격증</th><th>수상</th><th>인턴</th><th>동아리</th>
-      </tr>
-      {% for row in profile_comparison %}
-        <tr>
-          <td>{{ row.source }}</td>
-          <td>{{ row.gpa }}</td>
-          <td>{{ row.language }}</td>
-          <td>{{ row.cert }}</td>
-          <td>{{ row.award }}</td>
-          <td>{{ row.intern }}</td>
-          <td>{{ row.club }}</td>
-        </tr>
-      {% endfor %}
-    </table>
-  </div>
-
-  <div class="section">
+<!-- 2. 채용공고 요약 -->
+<div class="section">
   <h2>📋 채용공고 요약</h2>
-
   <h3>🛠 주요 업무 (Responsibilities)</h3>
-    <ul>
-      {% for item in jd_structured.responsibilities %}
-        <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-
-    <h3>🎯 필요 역량 (Requirements)</h3>
-    <ul>
-      {% for item in jd_structured.requirements %}
-        <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  <div class="section">
-    <h2>📄 자기소개서 질문별 분석</h2>
-
-    {% for item in resume_questions %}
-      <div style="margin-bottom: 1.5rem;">
-        <p><strong>📝 질문:</strong> {{ item.question }}</p>
-        <p><strong>📌 직무 설명 관련 피드백:</strong><br>{{ item.jd_feedback | default("분석 없음") }}</p>
-        <p><strong>🏢 기업 철학 관련 피드백:</strong><br>{{ item.philosophy_feedback | default("분석 없음") }}</p>
-      </div>
+  <ul>
+    {% for item, desc in jd_structured.responsibilities.items() %}
+      <li><strong>{{ item }}</strong>: {{ desc }}</li>
     {% endfor %}
-  </div>
+  </ul>
+
+  <h3>🎯 필요 역량 (Requirements)</h3>
+  <ul>
+    {% for item, desc in jd_structured.requirements.items() %}
+      <li><strong>{{ item }}</strong>: {{ desc }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="section">
+  <h2>📋 합격자소서 키워드</h2>
+  {% for item in resume_questions %}
+    <div class="tip">
+      <p><strong>🏢 기업성:</strong> {{ item.value | join(', ') }}</p>
+      <p><strong>🧠 태도:</strong> {{ item.attitude | join(', ') }}</p>
+      <p><strong>🔧 핵심경험:</strong> {{ item.experience | join(', ') }}</p>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- 5. 스펙 비교 -->
+<div class="section">
+  <h2>🧾 합격자 vs 나의 스펙 비교</h2>
+  <table>
+    <tr>
+      <th>구분</th><th>학점</th><th>어학</th><th>자격증</th><th>수상</th><th>인턴</th><th>동아리</th>
+    </tr>
+    {% for row in profile_comparison %}
+      <tr>
+        <td>{{ row.source }}</td>
+        <td>{{ row.gpa }}</td>
+        <td>{{ row.language }}</td>
+        <td>{{ row.cert }}</td>
+        <td>{{ row.award }}</td>
+        <td>{{ row.intern }}</td>
+        <td>{{ row.club }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<!-- 3. 자기소개서 JD 기반 분석 -->
+<div class="section">
+  <h2>✍️ 합격 자기소개서 분석 - 채용공고 기반 전략</h2>
+  {% for item in resume_questions %}
+    <p><strong>📝 {{ item.question.replace("보기", "") }}</strong></p>
+    <p>{{ item.jd_feedback | default("분석 없음") }}</p>
+  {% endfor %}
+</div>
 
 
-  <div class="section">
-    <h2>🗣 면접 요약</h2>
-    <ul>
-      <li><strong>면접 방식:</strong> {{ interview_summary["면접 방식"] }}</li>
-      <li><strong>질문 난이도:</strong> {{ interview_summary["질문 난이도"] }}</li>
-      <li><strong>면접관 태도:</strong> {{ interview_summary["면접관 태도"] }}</li>
-      <li><strong>지원자 팁:</strong> {{ interview_summary["지원자 팁"] }}</li>
-    </ul>
-  </div>
+<div class="section">
+  <h2>✍️ 합격 자기소개서 분석 - 기업철학 기반 전략</h3>
+  {% for item in resume_questions %}
+    <div class="section">
+      <p><strong>📝 {{ item.question.replace("보기", "") }}</strong></p>
+      <p>{{ item.philosophy_feedback | default("분석 없음") }}</p>
+    </div>
+  {% endfor %}
+</div>
 
-  <div class="section">
-    <h2>🎤 예상 면접 질문 및 답변</h2>
-    {% for category, content in interview_hard.items() %}
-      {% if content["질문 1"] %}
-        <h3>🧠 {{ category }}</h3>
-        <p><strong>질문 1:</strong> {{ content["질문 1"] }}</p>
-        <p><strong>답변 1:</strong> {{ content["답변 1"] }}</p>
-        <p><strong>질문 2:</strong> {{ content["질문 2"] }}</p>
-        <p><strong>답변 2:</strong> {{ content["답변 2"] }}</p>
-        {% if content["tips"] %}
-          <div class="tip">
-            <strong>💡 준비 팁</strong>
-            <ul>{% for tip in content["tips"] %}<li>{{ tip }}</li>{% endfor %}</ul>
-          </div>
-        {% endif %}
+<!-- 7. 면접 요약 -->
+<div class="section">
+  <h2>🗣 면접 요약</h2>
+  <ul>
+    <li><strong>면접 방식:</strong> {{ interview_summary["면접 방식"] }}</li>
+    <li><strong>질문 난이도:</strong> {{ interview_summary["질문 난이도"] }}</li>
+    <li><strong>면접관 태도:</strong> {{ interview_summary["면접관 태도"] }}</li>
+    <li><strong>지원자 팁:</strong> {{ interview_summary["지원자 팁"] }}</li>
+  </ul>
+</div>
+
+<!-- 8. 예상 면접 질문 -->
+<div class="section">
+  <h2>🎤 예상 면접 질문 및 답변</h2>
+  {% for category, content in interview_hard.items() %}
+    {% if content["질문 1"] %}
+      <h3>🧠 {{ category }}</h3>
+      <p><strong>질문 1:</strong> {{ content["질문 1"] }}</p>
+      <p><strong>답변 1:</strong> {{ content["답변 1"] }}</p>
+      <p><strong>질문 2:</strong> {{ content["질문 2"] }}</p>
+      <p><strong>답변 2:</strong> {{ content["답변 2"] }}</p>
+      {% if content["tips"] %}
+        <div class="tip">
+          <strong>💡 준비 팁</strong>
+          <ul>{% for tip in content["tips"] %}<li>{{ tip }}</li>{% endfor %}</ul>
+        </div>
       {% endif %}
-    {% endfor %}
-  </div>
+    {% endif %}
+  {% endfor %}
+</div>
 
 </body>
 </html>

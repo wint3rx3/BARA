@@ -56,6 +56,15 @@ QNA_USER_PROMPT = """
 
 ---
 
+💡 참고 정보:
+- 최신 기업/직무 뉴스 요약:
+{news_insight}
+
+- 재무 인사이트 요약:
+{finance_insight}
+
+---
+
 🧪 예시 면접 후기:
 {examples}
 

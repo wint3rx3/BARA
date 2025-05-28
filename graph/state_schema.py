@@ -38,10 +38,9 @@ class FinanceInsightInput(TypedDict):
     stock_df: str  # CSV 경로 또는 base64 encoded
     revenue_df: str
     news_articles: List[NewsSummary]  # 기존 NewsOutput과 연결
-
+    
 class FinanceOutput(TypedDict):
-    revenue_chart_path: str
-    stock_chart_path: str
+    combined_chart_path: str
     insight: str
 
 class FinanceResult(TypedDict):
@@ -61,11 +60,11 @@ class ResumeQuestion(TypedDict):
     philosophy_feedback: str
 
 class ResumeOutput(TypedDict):
-    profile_comparison: list  # 합격자 vs 사용자 스펙 리스트
-    jd_raw: str               # JD 원문 (JSON string)
-    resume_raw: List[str]     # 자소서 원문 (답변1, 답변2)
-    jd_structured: Dict[str, List[str]]  # responsibilities, requirements
-    resume_questions: List[ResumeQuestion]  # ✅ 질문 중심 구조
+    profile_comparison: list
+    jd_raw: str
+    resume_raw: List[str]
+    jd_structured: Dict[str, Dict[str, str]]  # ✅ 수정됨
+    resume_questions: List[ResumeQuestion]
 
 class ResumeResult(TypedDict):
     agent: Literal["AgentResume"]
